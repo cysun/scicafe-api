@@ -8,6 +8,7 @@ import javax.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import springrest.model.Program;
 import springrest.model.User;
 import springrest.model.dao.UserDao;
 
@@ -26,8 +27,19 @@ public class UserDaoImpl implements UserDao {
     @Override
     public List<User> getUsers()
     {
-        return entityManager.createQuery( "from User order by id", User.class )
-            .getResultList();
+    	return entityManager.createQuery( "from User order by id", User.class )
+                .getResultList();
+    }
+    
+    @Override
+    public User getUserByUsername(String username)
+    {
+    	try {
+			return entityManager.createQuery("from User WHERE username = ?1", User.class).setParameter(1, username)
+					.getSingleResult();
+		} catch (Exception e) {
+			return null;
+		}
     }
 
     @Override
@@ -36,5 +48,22 @@ public class UserDaoImpl implements UserDao {
     {
         return entityManager.merge( user );
     }
+    
+    @Override
+	@Transactional
+	public boolean deleteUser(User user)
+	{
+    	try {
+    		entityManager.remove(user);
+    		return true;
+    	} catch (Exception e) {
+    		return false;
+    	}
+	}
+    
+    @Override
+	public boolean isUserExists(User user) {
+		return entityManager.contains(user);
+	}
 
 }

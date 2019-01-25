@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [Command line suite]" verbose="0">
+  <test thread-count="5" name="Command line test(failed)" verbose="0">
+    <classes>
+      <class name="springrest.api.controller.ProgramControllerTest">
+        <methods>
+          <include name="springTestContextBeforeTestClass"/>
+          <include name="springTestContextPrepareTestInstance"/>
+          <include name="setup"/>
+          <include name="springTestContextAfterTestClass"/>
+          <include name="springTestContextBeforeTestMethod"/>
+          <include name="createProgram"/>
+          <include name="springTestContextAfterTestMethod"/>
+        </methods>
+      </class> <!-- springrest.api.controller.ProgramControllerTest -->
+      <class name="springrest.api.controller.EventControllerTest">
+        <methods>
+          <include name="rejectEvent"/>
+          <include name="springTestContextBeforeTestClass"/>
+          <include name="springTestContextPrepareTestInstance"/>
+          <include name="springTestContextAfterTestClass"/>
+          <include name="springTestContextBeforeTestMethod"/>
+          <include name="approveEvent"/>
+          <include name="springTestContextAfterTestMethod"/>
+          <include name="setup"/>
+        </methods>
+      </class> <!-- springrest.api.controller.EventControllerTest -->
+    </classes>
+  </test> <!-- Command line test(failed) -->
+</suite> <!-- Failed suite [Command line suite] -->

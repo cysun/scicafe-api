@@ -12,7 +12,10 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import springrest.model.Event.Status;
 
@@ -25,7 +28,8 @@ public class Reward implements Serializable{
 	public enum Status {
     	submitted, 
     	approved,
-    	rejected
+    	rejected,
+    	expired
     }
 
 	@Id
@@ -42,7 +46,9 @@ public class Reward implements Serializable{
 	
 	private Timestamp endTime;
 	
-	@ManyToMany
+	private Integer criteria;
+	
+	@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "rewards_tags", 
         joinColumns = { @JoinColumn(name = "reward_id") }, 
@@ -50,14 +56,16 @@ public class Reward implements Serializable{
     )
 	private Set<Tag> tags;
 	
-	@ManyToMany
+	@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "rewards_events", 
         joinColumns = { @JoinColumn(name = "reward_id") }, 
         inverseJoinColumns = { @JoinColumn(name = "event_id") }
     )
     Set<Event> events;
-
+	
+	@JsonBackReference
+	@ManyToOne(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
 	private User submitter;
 	
 	private Status status;
@@ -140,6 +148,14 @@ public class Reward implements Serializable{
 
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+
+	public Integer getCriteria() {
+		return criteria;
+	}
+
+	public void setCriteria(Integer criteria) {
+		this.criteria = criteria;
 	}
 	
 }

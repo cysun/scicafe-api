@@ -11,15 +11,8 @@ create table users (
         position varchar(255) not null,
         title varchar(255),
         username varchar(255) not null unique,
+        unit varchar(255) not null,
         primary key (id)
-);
-
-create table units (
-       id bigint not null,
-        name varchar(255) not null,
-        parentUnits_id bigint,
-        primary key (id),
-        foreign key (parentUnits_id) references units (id)
 );
 
 create table programs (
@@ -27,22 +20,20 @@ create table programs (
         description varchar(255) not null,
         fullName varchar(255) not null,
         name varchar(255) not null,
-        unit_id bigint,
-        primary key (id),
-        foreign key (unit_id) references units (id)
+        primary key (id)
 );
 
 create table events (
        id bigint not null,
         description varchar(255),
         endTime datetime(6),
-        eventName varchar(255),
+        name varchar(255),
         location varchar(255),
         startTime datetime(6),
         status integer,
-        organizerId bigint,
+        organizer_id bigint,
         primary key (id),
-        foreign key (organizerId) references users (id)
+        foreign key (organizer_id) references users (id)
 );
 
 create table tags (
@@ -59,7 +50,8 @@ create table rewards (
         providerName varchar(255),
         startTime datetime(6),
         status integer,
-        submitter tinyblob,
+        criteria integer,
+        submitter_id bigint,
         primary key (id)
 );
 
@@ -76,14 +68,6 @@ create table authorities (
         foreign key (user_id) references users (id),
         foreign key (role_id) references roles (id)
         
-);
-
-create table users_units (
-       user_id bigint not null,
-        unit_id bigint not null,
-        primary key (user_id, unit_id),
-        foreign key (user_id) references users (id),
-        foreign key (unit_id) references units (id)
 );
 
 create table users_programs (
@@ -106,8 +90,8 @@ create table events_tags (
        tag_id bigint not null,
         event_id bigint not null,
         primary key (tag_id, event_id),
-        foreign key (tag_id) references events (id),
-        foreign key (event_id) references tags (id)
+        foreign key (tag_id) references tags (id),
+        foreign key (event_id) references events (id)
 
 );
 

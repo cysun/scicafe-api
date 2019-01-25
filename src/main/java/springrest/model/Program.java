@@ -2,11 +2,12 @@ package springrest.model;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -27,9 +28,6 @@ public class Program implements Serializable{
 	 
 	@Column(nullable = false)
 	private String description;
-	
-	@ManyToOne
-    Unit unit;
 
 	public Long getId() {
 		return id;
@@ -61,14 +59,6 @@ public class Program implements Serializable{
 
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	public Unit getUnit() {
-		return unit;
-	}
-
-	public void setUnit(Unit unit) {
-		this.unit = unit;
 	}
 	
 }

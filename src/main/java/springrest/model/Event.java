@@ -16,6 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "events")
 public class Event implements Serializable{
@@ -25,14 +27,15 @@ public class Event implements Serializable{
 	public enum Status {
     	submitted, 
     	approved,
-    	rejected
+    	rejected,
+    	expired
     }
 	
 	@Id
     @GeneratedValue
     private Long id;
 	
-	private String eventName;
+	private String name;
 	
 	private String description;
 	
@@ -44,7 +47,7 @@ public class Event implements Serializable{
 	
 	private Status status;
 	
-	@ManyToMany
+	@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "events_tags", 
         joinColumns = { @JoinColumn(name = "tag_id") }, 
@@ -52,24 +55,32 @@ public class Event implements Serializable{
     )
     Set<Tag> tags;
 	
+	@JsonBackReference
 	@ManyToOne
-	@JoinColumn(name="organizerId") 
 	private User organizer;
 	
+	@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
+    @JoinTable(
+        name = "users_events", 
+        joinColumns = { @JoinColumn(name = "user_id") }, 
+        inverseJoinColumns = { @JoinColumn(name = "event_id") }
+    )
+	Set<User> attendees;
+	
+	public Set<User> getAttendees() {
+		return attendees;
+	}
+
+	public void setAttendees(Set<User> attendees) {
+		this.attendees = attendees;
+	}
+
 	public Long getId() {
 		return id;
 	}
-
+	
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getEventName() {
-		return eventName;
-	}
-
-	public void setEventName(String eventName) {
-		this.eventName = eventName;
 	}
 
 	public String getDescription() {
@@ -127,5 +138,15 @@ public class Event implements Serializable{
 	public void setOrganizer(User organizer) {
 		this.organizer = organizer;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+
 	
 }

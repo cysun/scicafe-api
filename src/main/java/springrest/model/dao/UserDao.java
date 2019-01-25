@@ -6,10 +6,16 @@ import springrest.model.User;
 
 public interface UserDao {
 
-    User getUser( Long id );
+    public User getUser( Long id );
 
-    List<User> getUsers();
+    public List<User> getUsers();
+    
+    public User getUserByUsername( String username );
 
-    User saveUser( User user );
+    public User saveUser( User user );
+    
+    public boolean deleteUser(User user);
+
+	boolean isUserExists(User user);
 
 }

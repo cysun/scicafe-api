@@ -8,7 +8,7 @@
     	<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect" />
-            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/springrest?allowPublicKeyRetrieval=true&amp;useSSL=false&amp;serverTimezone=UTC" />
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/sci-cafe?allowPublicKeyRetrieval=true&amp;useSSL=false&amp;serverTimezone=UTC" />
             <property name="javax.persistence.jdbc.user" value="root" />
             <property name="javax.persistence.jdbc.password" value="1234" />
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect" />

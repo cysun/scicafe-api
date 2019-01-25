@@ -17,6 +17,8 @@ import javax.persistence.Table;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
@@ -57,38 +59,44 @@ public class User implements Serializable {
     private String email;
     
     private String title;
+    
+    public String getUnit() {
+		return unit;
+	}
 
-    @ManyToMany
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+
+	public Set<Program> getPrograms() {
+		return programs;
+	}
+
+	public void setPrograms(Set<Program> programs) {
+		this.programs = programs;
+	}
+
+	private String unit;
+
+    @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(name = "authorities",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id"))
     Set<Role> roles;
     
-    @ManyToMany
-    @JoinTable(
-        name = "users_events", 
-        joinColumns = { @JoinColumn(name = "user_id") }, 
-        inverseJoinColumns = { @JoinColumn(name = "event_id") }
-    )
-    Set<Event> participatedEvents;
+    @JsonIgnore
+	@ManyToMany(mappedBy="attendees" )
+    Set<Event> events;
     
     //a user may have more than one program
-    @ManyToMany
+    @JsonBackReference
+    @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "users_programs", 
         joinColumns = { @JoinColumn(name = "user_id") }, 
         inverseJoinColumns = { @JoinColumn(name = "program_id") }
     )
     Set<Program> programs;
-    
-    //a user may have more than one organizational unit
-    @ManyToMany
-    @JoinTable(
-        name = "users_units", 
-        joinColumns = { @JoinColumn(name = "user_id") }, 
-        inverseJoinColumns = { @JoinColumn(name = "unit_id") }
-    )
-    Set<Unit> units;
 
     public User()
     {
@@ -185,28 +193,13 @@ public class User implements Serializable {
         this.roles = roles;
     }
 
-	public Set<Event> getParticipatedEvents() {
-		return participatedEvents;
+	public Set<Event> getEvents() {
+		return events;
 	}
 
-	public void setParticipatedEvents(Set<Event> participatedEvents) {
-		this.participatedEvents = participatedEvents;
+	public void setEvents(Set<Event> events) {
+		this.events = events;
 	}
 
-	public Set<Program> getPrograms() {
-		return programs;
-	}
-
-	public void setPrograms(Set<Program> programs) {
-		this.programs = programs;
-	}
-
-	public Set<Unit> getUnits() {
-		return units;
-	}
-
-	public void setUnits(Set<Unit> units) {
-		this.units = units;
-	}
-
+    
 }
