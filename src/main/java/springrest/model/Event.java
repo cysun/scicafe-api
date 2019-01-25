@@ -55,7 +55,7 @@ public class Event implements Serializable{
     )
     Set<Tag> tags;
 	
-	@JsonBackReference
+
 	@ManyToOne
 	private User organizer;
 	

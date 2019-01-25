@@ -124,81 +124,110 @@ public class EventController {
     
     // create a new event
     @RequestMapping(value = "/events", method = RequestMethod.POST)
-	public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+	public ResponseEntity<Event> createEvent(@RequestBody Event event,HttpServletRequest request) {
     	System.out.println("Creating Event " + event.getName());
-    	if (event.getLocation() == null || event.getStartTime() == null || event.getEndTime() == null || event.getName() == null || event.getStatus() == null)
-    		throw new RestException( 400, "missing required field(s)." );
-    	if (eventDao.isEventExists(event)) {
-            System.out.println("A Event with name " + event.getName() + " already exist");
-            return new ResponseEntity<Event>(HttpStatus.CONFLICT);
-        }
-		try {
-			return new ResponseEntity<Event>(eventDao.saveEvent(event),HttpStatus.CREATED);
-		} catch (Exception e) {
-			throw new RestException(400, e.getMessage());
-		}
+    	try {
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+     		if (event.getLocation() == null || event.getStartTime() == null || event.getEndTime() == null || event.getName() == null)
+        		throw new RestException( 400, "missing required field(s)." );
+     		if (Utils.orgnaziedByEventOrganizor(requestUser))
+     			event.setStatus(springrest.model.Event.Status.approved);
+     		else
+     			event.setStatus(springrest.model.Event.Status.submitted);
+     		return new ResponseEntity<Event>(eventDao.saveEvent(event),HttpStatus.CREATED);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
 	}
     
     // edit a event
    	@RequestMapping(value = "/event/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event newEvent) {
+   	public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event newEvent,HttpServletRequest request) {
    		System.out.println("Updating Event " + id);
-   		Event event = eventDao.getEvent(id);
-		if (event == null)
-			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
    		try {
-   			event.setName(newEvent.getName());
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+     		Event event = eventDao.getEvent(id);
+    		if (event == null)
+    			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
+    		event.setName(newEvent.getName());
+    		event.setDescription(newEvent.getDescription());
+    		event.setLocation(newEvent.getLocation());
+    		event.setStartTime(newEvent.getStartTime());
+    		event.setEndTime(newEvent.getEndTime());
+    		event.setTags(newEvent.getTags());
    			return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
-   		} catch (Exception e) {
-   			throw new RestException(400, e.getMessage());
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
    		}
    	}
    	
     // delete a event
  	@RequestMapping(value = "/event/{id}", method = RequestMethod.DELETE)
- 	public ResponseEntity<Event> deleteEvent(@PathVariable("id") long id) {
+ 	public ResponseEntity<Event> deleteEvent(@PathVariable("id") long id,HttpServletRequest request) {
         System.out.println("Fetching & Deleting Event with id " + id);
- 
-        Event event = eventDao.getEvent(id);
-        if (event == null) {
-            System.out.println("Unable to delete. Event with id " + id + " not found");
-            return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-        }
         try {
-        	eventDao.deleteEvent(event);
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+     		Event event = eventDao.getEvent(id);
+            if (event == null) {
+                System.out.println("Unable to delete. Event with id " + id + " not found");
+                return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
+            }
+            eventDao.deleteEvent(event);
         	return new ResponseEntity<Event>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-        	throw new RestException(400, e.getMessage());
-        }
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
     }
  	
  	// approve a event
 	@RequestMapping(value = "/event/approve/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<Event> approveEvent(@PathVariable Long id) {
-   		System.out.println("Approving Event " + id);
-   		Event event = eventDao.getEvent(id);
-		if (event == null)
-			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-   		try {
-   			event.setStatus(springrest.model.Event.Status.approved);
-   			return new ResponseEntity<Event>(event, HttpStatus.OK);
-   		} catch (Exception e) {
-   			throw new RestException(400, e.getMessage());
+   	public ResponseEntity<Event> approveEvent(@PathVariable Long id,HttpServletRequest request) {
+		try {
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+    	   	Event event = eventDao.getEvent(id);
+    		if (event == null)
+    			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
+    		event.setStatus(springrest.model.Event.Status.approved);
+       		return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
    		}
    	}
 	
 	// reject a event
 	@RequestMapping(value = "/event/reject/{id}", method = RequestMethod.PUT)
-	public ResponseEntity<Event> rejectEvent(@PathVariable Long id) {
+	public ResponseEntity<Event> rejectEvent(@PathVariable Long id,HttpServletRequest request) {
 	   	System.out.println("Rejecting Event " + id);
-	   	Event event = eventDao.getEvent(id);
-		if (event == null)
-			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
 	   	try {
-	   		event.setStatus(springrest.model.Event.Status.rejected);
-	   	return new ResponseEntity<Event>(event, HttpStatus.OK);
-	   	} catch (Exception e) {
-	   		throw new RestException(400, e.getMessage());
-	   	}
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+    	   	Event event = eventDao.getEvent(id);
+    		event.setStatus(springrest.model.Event.Status.rejected);
+    		System.out.println(event.getId());
+    		if (event == null)
+    			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
+       		return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
 	}
 }

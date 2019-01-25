@@ -51,7 +51,7 @@ public class Utils {
 		return isValid;
 	}
 	
-	public boolean orgnaziedByEventOrganizor(User user) {
+	public static boolean orgnaziedByEventOrganizor(User user) {
 		Set<Role> roles = user.getRoles();
 		Iterator<Role> iterator = roles.iterator();
 		boolean isValid = false;
@@ -63,7 +63,7 @@ public class Utils {
 		return isValid;
 	}
 	
-	public boolean providedByRewardProvider(User user) {
+	public static boolean providedByRewardProvider(User user) {
 		Set<Role> roles = user.getRoles();
 		Iterator<Role> iterator = roles.iterator();
 		boolean isValid = false;
