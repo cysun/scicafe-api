@@ -18,25 +18,25 @@ import org.springframework.web.bind.annotation.RestController;
 
 import springrest.api.error.RestException;
 import springrest.model.Event;
-import springrest.model.Program;
+import springrest.model.Tag;
 import springrest.model.User;
-import springrest.model.dao.ProgramDao;
+import springrest.model.dao.TagDao;
 import springrest.model.dao.UserDao;
 import springrest.util.Utils;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-public class ProgramController {
+public class TagController {
 	
 	@Autowired
-    private ProgramDao programDao;
+    private TagDao tagDao;
 	
 	@Autowired
     private UserDao userDao;
 
-    // Get an program by id
-    @RequestMapping(value = "/program/{id}", method = RequestMethod.GET)
-    public ResponseEntity<Program> getProgram( @PathVariable Long id ,HttpServletRequest request)
+    // Get an tag by id
+    @RequestMapping(value = "/tag/{id}", method = RequestMethod.GET)
+    public ResponseEntity<Tag> getTag( @PathVariable Long id ,HttpServletRequest request)
     {
     	try {
     		String token = request.getHeader("Authorization");
@@ -44,21 +44,21 @@ public class ProgramController {
       		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
       		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
       			throw new RestException(400, "Invalid Authorization");
-      		System.out.println("Fetching Program with id " + id);
-        	Program program = programDao.getProgram(id);
-        	if (program == null) {
-                System.out.println("Program with id " + id + " not found");
-                return new ResponseEntity<Program>(HttpStatus.NOT_FOUND);
+      		System.out.println("Fetching Tag with id " + id);
+        	Tag tag = tagDao.getTag(id);
+        	if (tag == null) {
+                System.out.println("Tag with id " + id + " not found");
+                return new ResponseEntity<Tag>(HttpStatus.NOT_FOUND);
             }
-            return new ResponseEntity<Program>(program, HttpStatus.OK);
+            return new ResponseEntity<Tag>(tag, HttpStatus.OK);
     	} catch (Exception e) {
     		throw new RestException(400, e.getMessage());
     	}
     }
 
-    // Get all programs
-    @RequestMapping(value = "/programs", method = RequestMethod.GET)
-    public ResponseEntity<List<Program>> getPrograms(HttpServletRequest request)
+    // Get all tags
+    @RequestMapping(value = "/tags", method = RequestMethod.GET)
+    public ResponseEntity<List<Tag>> getTags(HttpServletRequest request)
     {
          try {
      		String token = request.getHeader("Authorization");
@@ -66,78 +66,76 @@ public class ProgramController {
       		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
       		if (!Utils.proceedOnlyIfAdmin(requestUser))
       			throw new RestException(400, "Invalid Authorization");
-      		List<Program> programs = programDao.getPrograms();
-      		if(programs.isEmpty()){
-                return new ResponseEntity<List<Program>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+      		List<Tag> tags = tagDao.getTags();
+      		if(tags.isEmpty()){
+                return new ResponseEntity<List<Tag>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
             }
-            return new ResponseEntity<List<Program>>(programs, HttpStatus.OK);
+            return new ResponseEntity<List<Tag>>(tags, HttpStatus.OK);
      	 }  catch (Exception e) {
      		 throw new RestException(400, e.getMessage());
      	 }
     }
     
-    // create a new program
-    @RequestMapping(value = "/programs", method = RequestMethod.POST)
-	public ResponseEntity<Program> createProgram(@RequestBody Program program,HttpServletRequest request) {
+    // create a new tag
+    @RequestMapping(value = "/tags", method = RequestMethod.POST)
+	public ResponseEntity<Tag> createTag(@RequestBody Tag tag,HttpServletRequest request) {
     	try {
      		String token = request.getHeader("Authorization");
       		Utils.decode(token).getClaim("userId").asLong();
       		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
       		if (!Utils.proceedOnlyIfAdmin(requestUser))
       			throw new RestException(400, "Invalid Authorization");
-      		System.out.println("Creating Program " + program.getName());
-        	if (program.getName() == null || program.getFullName() == null || program.getDescription() == null )
+      		System.out.println("Creating Tag " + tag.getName());
+        	if (tag.getName() == null)
         		throw new RestException( 400, "missing required field(s)." );
-        	if (programDao.isProgramExists(program)) {
-                System.out.println("A Program with name " + program.getName() + " already exist");
-                return new ResponseEntity<Program>(HttpStatus.CONFLICT);
+        	if (tagDao.isTagExists(tag)) {
+                System.out.println("A Tag with name " + tag.getName() + " already exist");
+                return new ResponseEntity<Tag>(HttpStatus.CONFLICT);
             }
-        	return new ResponseEntity<Program>(programDao.saveProgram(program),HttpStatus.CREATED);
+        	return new ResponseEntity<Tag>(tagDao.saveTag(tag),HttpStatus.CREATED);
      	 }  catch (Exception e) {
      		 throw new RestException(400, e.getMessage());
      	 }
     	
 	}
     
-    // edit a program
-   	@RequestMapping(value = "/program/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<Program> updateProgram(@PathVariable Long id, @RequestBody Program newProgram,HttpServletRequest request) {
+    // edit a tag
+   	@RequestMapping(value = "/tag/{id}", method = RequestMethod.PUT)
+   	public ResponseEntity<Tag> updateTag(@PathVariable Long id, @RequestBody Tag newTag,HttpServletRequest request) {
    		try {
    			String token = request.getHeader("Authorization");
       		Utils.decode(token).getClaim("userId").asLong();
       		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
       		if (!Utils.proceedOnlyIfAdmin(requestUser))
       			throw new RestException(400, "Invalid Authorization");
-      		System.out.println("Updating Program " + id);
-       		Program program = programDao.getProgram(id);
-    		if (program == null)
-    			return new ResponseEntity<Program>(HttpStatus.NOT_FOUND);
-    		program.setName(newProgram.getName());
-   			program.setFullName(newProgram.getFullName());
-   			program.setDescription(newProgram.getDescription());
-   			return new ResponseEntity<Program>(programDao.saveProgram(program), HttpStatus.OK);
+      		System.out.println("Updating Tag " + id);
+       		Tag tag = tagDao.getTag(id);
+    		if (tag == null)
+    			return new ResponseEntity<Tag>(HttpStatus.NOT_FOUND);
+    		tag.setName(newTag.getName());
+   			return new ResponseEntity<Tag>(tagDao.saveTag(tag), HttpStatus.OK);
    		} catch (Exception e) {
    			throw new RestException(400, e.getMessage());
    		}
    	}
    	
-    // delete a program
- 	@RequestMapping(value = "/program/{id}", method = RequestMethod.DELETE)
- 	public ResponseEntity<Program> deleteProgram(@PathVariable("id") long id,HttpServletRequest request) {
+    // delete a tag
+ 	@RequestMapping(value = "/tag/{id}", method = RequestMethod.DELETE)
+ 	public ResponseEntity<Tag> deleteTag(@PathVariable("id") long id,HttpServletRequest request) {
         try {
         	String token = request.getHeader("Authorization");
       		Utils.decode(token).getClaim("userId").asLong();
       		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
       		if (!Utils.proceedOnlyIfAdmin(requestUser))
       			throw new RestException(400, "Invalid Authorization");
-        	System.out.println("Fetching & Deleting Program with id " + id);
-            Program program = programDao.getProgram(id);
-            if (program == null) {
-                System.out.println("Unable to delete. Program with id " + id + " not found");
-                return new ResponseEntity<Program>(HttpStatus.NOT_FOUND);
+        	System.out.println("Fetching & Deleting Tag with id " + id);
+            Tag tag = tagDao.getTag(id);
+            if (tag == null) {
+                System.out.println("Unable to delete. Tag with id " + id + " not found");
+                return new ResponseEntity<Tag>(HttpStatus.NOT_FOUND);
             }
-        	programDao.deleteProgram(program);
-        	return new ResponseEntity<Program>(HttpStatus.OK);
+        	tagDao.deleteTag(tag);
+        	return new ResponseEntity<Tag>(HttpStatus.OK);
         } catch (Exception e) {
         	throw new RestException(400, e.getMessage());
         }
