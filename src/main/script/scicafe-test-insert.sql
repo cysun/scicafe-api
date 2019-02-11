@@ -21,10 +21,10 @@ insert into users (id,firstName,lastName,email,username,password,position,title,
 insert into users (id,firstName,lastName,email,username,password,position,title,unit) values(104,'Pamula','Raj','pamularaj@gmail.com','pamularaj','1234','Faculty','CS Department Chair','College of Engineering, Computer Science, and Technology');
 insert into users (id,firstName,lastName,email,username,password,position,title,unit) values(105,'test','test','test','test','1234','Faculty','test','test');
 
-insert into events (id,name,description,location,organizer_id,startTime,endTime,status) values(101,'ACM Student Chapter events','It is of the ACM Student Chapter events','ET-324',102,'2018-9-27 10:30:00','2018-9-30 10:30:00',1);
-insert into events (id,name,description,location,organizer_id,startTime,endTime,status) values(102,'Dummy event','It is a dummy event','ET-111',101,'2018-10-1 00:00:00','2018-10-07 23:59:59',1);
-insert into events (id,name,description,location,organizer_id,startTime,endTime,status) values(103,'Test event','It is a test event','ET-111',101,'2018-10-1 00:00:00','2018-10-07 23:59:59',0);
-insert into events (id,name,description,location,organizer_id,startTime,endTime,status) values(104,'Test event','It is a test event','ET-111',101,'2018-10-1 00:00:00','2018-10-07 23:59:59',0);
+insert into events (id,name,description,location,organizer_id,eventDate,startTime,endTime,status) values(101,'ACM Student Chapter events','It is of the ACM Student Chapter events','ET-324',102,'2018-12-1','10:30:00','12:30:00',1);
+insert into events (id,name,description,location,organizer_id,eventDate,startTime,endTime,status) values(102,'Dummy event','It is a dummy event','ET-111',101,'2019-1-1','00:00:00','23:59:59',1);
+insert into events (id,name,description,location,organizer_id,eventDate,startTime,endTime,status) values(103,'Test event','It is a test event','ET-111',101,'2019-2-1','00:00:00','23:59:59',0);
+insert into events (id,name,description,location,organizer_id,eventDate,startTime,endTime,status) values(104,'Test event','It is a test event','ET-111',101,'2019-3-1','00:00:00','23:59:59',0);
 
 insert into rewards (id,name,description,providerName,submitter_id,startTime,endTime,criteria,status) values(101,'Extra Credit','It is extra credit for students who attend all 6 ACM Student Chapter events','Dr.Pamula',102,'2018-9-27 10:30:00','2018-9-30 10:30:00',6,1);
 insert into rewards (id,name,description,providerName,submitter_id,startTime,endTime,criteria,status) values(102,'Cal State LA gears','It is reward for students who attend the dummy event','Dr.Pamula',102,'2018-9-27 10:30:00','2018-9-30 10:30:00',1,0);

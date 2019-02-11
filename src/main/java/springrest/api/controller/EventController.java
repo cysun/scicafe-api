@@ -1,5 +1,8 @@
 package springrest.api.controller;
 
+import java.util.Date;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -124,20 +127,32 @@ public class EventController {
     
     // create a new event
     @RequestMapping(value = "/events", method = RequestMethod.POST)
-	public ResponseEntity<Event> createEvent(@RequestBody Event event,HttpServletRequest request) {
-    	System.out.println("Creating Event " + event.getName());
+	public ResponseEntity<Event> createEvent(@RequestBody JSONObject json_object,HttpServletRequest request) {
+    	Event event = new Event();
+    	System.out.println("Creating Event " + json_object.get("name"));
     	try {
     		String token = request.getHeader("Authorization");
      		Utils.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
      		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
      			throw new RestException(400, "Invalid Authorization");
-     		if (event.getLocation() == null || event.getStartTime() == null || event.getEndTime() == null || event.getName() == null)
+     		if (json_object.get("name") == null || json_object.get("startTime") == null || json_object.get("endTime") == null || json_object.get("location") == null
+     				||json_object.get("eventDate")== null||json_object.get("description")==null)
         		throw new RestException( 400, "missing required field(s)." );
+     		event.setName((String)json_object.get("name"));
+     		event.setDescription((String)json_object.get("description"));
+     		event.setLocation((String)json_object.get("location"));
+     		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+     		event.setEventDate(sdf.parse((String) json_object.get("eventDate")));
+     		sdf = new SimpleDateFormat("HH:mm");
+     		event.setStartTime(new Time(sdf.parse((String)json_object.get("startTime")).getTime()));
+     		event.setEndTime(new Time(sdf.parse((String)json_object.get("endTime")).getTime()));
+     		event.setOrganizer(requestUser);
      		if (Utils.orgnaziedByEventOrganizor(requestUser))
      			event.setStatus(springrest.model.Event.Status.approved);
      		else
      			event.setStatus(springrest.model.Event.Status.submitted);
+     		System.out.println(event.getEndTime());;
      		return new ResponseEntity<Event>(eventDao.saveEvent(event),HttpStatus.CREATED);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());

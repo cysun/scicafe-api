@@ -26,10 +26,11 @@ create table programs (
 create table events (
        id bigint not null,
         description varchar(255),
-        endTime datetime(6),
+        eventDate date,
+        endTime time,
         name varchar(255),
         location varchar(255),
-        startTime datetime(6),
+        startTime time,
         status integer,
         organizer_id bigint,
         primary key (id),

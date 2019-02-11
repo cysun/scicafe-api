@@ -1,7 +1,8 @@
 package springrest.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.sql.Time;
+import java.util.Date;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -17,6 +18,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "events")
@@ -41,9 +43,13 @@ public class Event implements Serializable{
 	
 	private String location;
 	
-	private Timestamp startTime;
+	private Date eventDate;
 	
-	private Timestamp endTime;
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="HH:mm:ss")
+	private Time startTime;
+	
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="HH:mm:ss")
+	private Time endTime;
 	
 	private Status status;
 	
@@ -99,22 +105,6 @@ public class Event implements Serializable{
 		this.location = location;
 	}
 
-	public Timestamp getStartTime() {
-		return startTime;
-	}
-
-	public void setStartTime(Timestamp startTime) {
-		this.startTime = startTime;
-	}
-
-	public Timestamp getEndTime() {
-		return endTime;
-	}
-
-	public void setEndTime(Timestamp endTime) {
-		this.endTime = endTime;
-	}
-
 	public Status getStatus() {
 		return status;
 	}
@@ -145,6 +135,30 @@ public class Event implements Serializable{
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Date getEventDate() {
+		return this.eventDate;
+	}
+
+	public void setEventDate(Date eventDate) {
+		this.eventDate = eventDate;
+	}
+
+	public Time getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(Time startTime) {
+		this.startTime = startTime;
+	}
+
+	public Time getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(Time endTime) {
+		this.endTime = endTime;
 	}
 	
 

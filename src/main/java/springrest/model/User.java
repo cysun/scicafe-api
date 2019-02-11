@@ -89,7 +89,6 @@ public class User implements Serializable {
     Set<Event> events;
     
     //a user may have more than one program
-    @JsonBackReference
     @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "users_programs", 

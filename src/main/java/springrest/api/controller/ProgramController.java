@@ -61,11 +61,6 @@ public class ProgramController {
     public ResponseEntity<List<Program>> getPrograms(HttpServletRequest request)
     {
          try {
-     		String token = request.getHeader("Authorization");
-      		Utils.decode(token).getClaim("userId").asLong();
-      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-      		if (!Utils.proceedOnlyIfAdmin(requestUser))
-      			throw new RestException(400, "Invalid Authorization");
       		List<Program> programs = programDao.getPrograms();
       		if(programs.isEmpty()){
                 return new ResponseEntity<List<Program>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
