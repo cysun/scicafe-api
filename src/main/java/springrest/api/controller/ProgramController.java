@@ -74,7 +74,8 @@ public class ProgramController {
     // create a new program
     @RequestMapping(value = "/programs", method = RequestMethod.POST)
 	public ResponseEntity<Program> createProgram(@RequestBody Program program,HttpServletRequest request) {
-    	try {
+    	System.out.println(program.getDescription());
+
      		String token = request.getHeader("Authorization");
       		Utils.decode(token).getClaim("userId").asLong();
       		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
@@ -88,9 +89,7 @@ public class ProgramController {
                 return new ResponseEntity<Program>(HttpStatus.CONFLICT);
             }
         	return new ResponseEntity<Program>(programDao.saveProgram(program),HttpStatus.CREATED);
-     	 }  catch (Exception e) {
-     		 throw new RestException(400, e.getMessage());
-     	 }
+
     	
 	}
     

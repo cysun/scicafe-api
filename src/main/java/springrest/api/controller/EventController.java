@@ -104,8 +104,8 @@ public class EventController {
     }
     
     // add an attendees
-    @RequestMapping(value = "/event/{id}/attendee", method = RequestMethod.POST)
-    public ResponseEntity<Set<User>> addAttendee(@PathVariable Long id,@RequestBody JSONObject json_object,HttpServletRequest request)
+    @RequestMapping(value = "/event/{id}/attendee/{useId}", method = RequestMethod.POST)
+    public ResponseEntity<Set<User>> addAttendee(@PathVariable Long id,@PathVariable Long userId,HttpServletRequest request)
     {
     	try {
     		String token = request.getHeader("Authorization");
@@ -113,11 +113,75 @@ public class EventController {
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
      		if (!Utils.proceedOnlyIfAdmin (requestUser))
      			throw new RestException(400, "Invalid Authorization");
-     		User user = userDao.getUser(Long.parseLong(String.valueOf(json_object.get("id"))));
+     		//User user = userDao.getUser(userId);
+        	Event event = eventDao.getEvent(id);
+        	if (event == null)
+    			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
+        	event.getAttendees().add(requestUser);
+    		eventDao.saveEvent(event);
+    		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
+    }
+    
+    @RequestMapping(value = "/event/{id}/attendee", method = RequestMethod.POST)
+    public ResponseEntity<Set<User>> enrollEvent(@PathVariable Long id,HttpServletRequest request)
+    {
+    	try {
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+     		//User user = userDao.getUser(userId);
+        	Event event = eventDao.getEvent(id);
+        	if (event == null)
+    			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
+        	event.getAttendees().add(requestUser);
+    		eventDao.saveEvent(event);
+    		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
+    }
+    
+    @RequestMapping(value = "/event/{id}/attendee/username", method = RequestMethod.POST)
+    public ResponseEntity<Set<User>> addAttendeeByUsername(@PathVariable Long id,@RequestBody JSONObject json_object,HttpServletRequest request)
+    {
+    	try {
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+     		User user = userDao.getUserByUsername((String)json_object.get("username"));
         	Event event = eventDao.getEvent(id);
         	if (event == null)
     			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
         	event.getAttendees().add(user);
+    		eventDao.saveEvent(event);
+    		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
+    }
+    
+    // drop an attendees
+    @RequestMapping(value = "/event/{id}/attendee/{userId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Set<User>> dropAttendee(@PathVariable Long id,@PathVariable Long userId,HttpServletRequest request)
+    {
+    	try {
+    		String token = request.getHeader("Authorization");
+     		Utils.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+     			throw new RestException(400, "Invalid Authorization");
+     		User user = userDao.getUser(userId);
+        	Event event = eventDao.getEvent(id);
+        	if (event == null)
+        		throw new RestException(400, "Event not found");
+        	event.getAttendees().remove(user);
     		eventDao.saveEvent(event);
     		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
     	}  catch (Exception e) {
@@ -161,7 +225,7 @@ public class EventController {
     
     // edit a event
    	@RequestMapping(value = "/event/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event newEvent,HttpServletRequest request) {
+   	public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody JSONObject json_object,HttpServletRequest request) {
    		System.out.println("Updating Event " + id);
    		try {
     		String token = request.getHeader("Authorization");
@@ -172,12 +236,27 @@ public class EventController {
      		Event event = eventDao.getEvent(id);
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-    		event.setName(newEvent.getName());
-    		event.setDescription(newEvent.getDescription());
-    		event.setLocation(newEvent.getLocation());
-    		event.setStartTime(newEvent.getStartTime());
-    		event.setEndTime(newEvent.getEndTime());
-    		event.setTags(newEvent.getTags());
+    		event.setName((String)json_object.get("name"));
+     		event.setDescription((String)json_object.get("description"));
+     		event.setLocation((String)json_object.get("location"));
+     		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+     		event.setEventDate(sdf.parse((String) json_object.get("eventDate")));
+     		sdf = new SimpleDateFormat("HH:mm");
+     		event.setStartTime(new Time(sdf.parse((String)json_object.get("startTime")).getTime()));
+     		event.setEndTime(new Time(sdf.parse((String)json_object.get("endTime")).getTime()));
+     		event.setOrganizer(requestUser);
+     		if(((String)json_object.get("status")).equals("approved")) {
+     			System.out.println((String)json_object.get("status"));
+     			event.setStatus(Event.Status.approved);
+     		}
+     		if(((String)json_object.get("status")).equals("rejected")) {
+     			System.out.println((String)json_object.get("status"));
+     			event.setStatus(Event.Status.rejected);
+     		}
+     		if(((String)json_object.get("status")).equals("submitted")) {
+     			System.out.println((String)json_object.get("status"));
+     			event.setStatus(Event.Status.submitted);
+     		}
    			return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());

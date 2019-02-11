@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
@@ -60,6 +61,10 @@ public class User implements Serializable {
     
     private String title;
     
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "program_id", referencedColumnName = "id")
+    private Program program;
+    
     public String getUnit() {
 		return unit;
 	}
@@ -68,12 +73,12 @@ public class User implements Serializable {
 		this.unit = unit;
 	}
 
-	public Set<Program> getPrograms() {
-		return programs;
+	public Program getPrograms() {
+		return program;
 	}
 
-	public void setPrograms(Set<Program> programs) {
-		this.programs = programs;
+	public void setPrograms(Program programs) {
+		this.program = program;
 	}
 
 	private String unit;
@@ -88,14 +93,14 @@ public class User implements Serializable {
 	@ManyToMany(mappedBy="attendees" )
     Set<Event> events;
     
-    //a user may have more than one program
-    @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
-    @JoinTable(
-        name = "users_programs", 
-        joinColumns = { @JoinColumn(name = "user_id") }, 
-        inverseJoinColumns = { @JoinColumn(name = "program_id") }
-    )
-    Set<Program> programs;
+//    //a user may have more than one program
+//    @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
+//    @JoinTable(
+//        name = "users_programs", 
+//        joinColumns = { @JoinColumn(name = "user_id") }, 
+//        inverseJoinColumns = { @JoinColumn(name = "program_id") }
+//    )
+//    Set<Program> programs;
 
     public User()
     {

@@ -19,6 +19,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "events")
@@ -68,8 +69,8 @@ public class Event implements Serializable{
 	@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "users_events", 
-        joinColumns = { @JoinColumn(name = "user_id") }, 
-        inverseJoinColumns = { @JoinColumn(name = "event_id") }
+        joinColumns = { @JoinColumn(name = "event_id") }, 
+        inverseJoinColumns = { @JoinColumn(name = "user_id") }
     )
 	Set<User> attendees;
 	

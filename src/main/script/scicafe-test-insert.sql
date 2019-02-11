@@ -15,7 +15,7 @@ insert into tags (id,name) values(102,'IEEE');
 insert into tags (id,name) values(103,'ECST');
 insert into tags (id,name) values(104,'DUMMY');
 
-insert into users (id,firstName,lastName,email,username,password,position,title,unit) values(101,'Peter','Parker','peterparker@gmail.com','admin','1234','Staff','Admin of Sci-CAFE','CSULA');
+insert into users (id,firstName,lastName,email,username,password,position,title,unit,program_id) values(101,'Peter','Parker','peterparker@gmail.com','admin','1234','Staff','Admin of Sci-CAFE','CSULA','101');
 insert into users (id,firstName,lastName,email,username,password,position,title,unit) values(102,'Yi','Chen','chenyii426@gmail.com','chenyi','1234','Student','','College of Engineering, Computer Science, and Technology');
 insert into users (id,firstName,lastName,email,username,password,position,title,unit) values(103,'Joe','Doe','joedoe123@gmail.com','joedoe','1234','Faculty','President of ACM Student Chapter','College of Engineering, Computer Science, and Technology');
 insert into users (id,firstName,lastName,email,username,password,position,title,unit) values(104,'Pamula','Raj','pamularaj@gmail.com','pamularaj','1234','Faculty','CS Department Chair','College of Engineering, Computer Science, and Technology');
