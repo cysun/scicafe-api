@@ -24,5 +24,6 @@ drop table rewards;
 
 drop table roles;
 
+drop table news;
 
 

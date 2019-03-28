@@ -3,6 +3,7 @@ package springrest.model.dao;
 import java.util.List;
 
 import springrest.model.Event;
+import javax.persistence.Entity;
 
 
 public interface EventDao {
@@ -10,6 +11,8 @@ public interface EventDao {
     Event getEvent( Long id );
 
     List<Event> getEvents();
+    
+    List<Event> getApprovedEvents();
 
     Event saveEvent ( Event  event);
 

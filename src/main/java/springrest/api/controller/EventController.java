@@ -25,6 +25,7 @@ import springrest.model.User;
 import springrest.model.dao.EventDao;
 import springrest.model.dao.UserDao;
 import springrest.util.Utils;
+import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -41,11 +42,11 @@ public class EventController {
     public ResponseEntity<Event> getEvent( @PathVariable Long id,HttpServletRequest request)
     {
     	try {
-    		String token = request.getHeader("Authorization");
-     		Utils.decode(token).getClaim("userId").asLong();
-     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
-     			throw new RestException(400, "Invalid Authorization");
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
      		System.out.println("Fetching Event with id " + id);
         	Event event = eventDao.getEvent(id);
         	if (event == null) {
@@ -64,12 +65,32 @@ public class EventController {
     public ResponseEntity<List<Event>> getEvents(HttpServletRequest request)
     {
     	 try {
-    		String token = request.getHeader("Authorization");
-     		Utils.decode(token).getClaim("userId").asLong();
-     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
-     			throw new RestException(400, "Invalid Authorization");
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
      		List<Event> events = eventDao.getEvents();
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    	 
+    }
+    
+    @RequestMapping(value = "/approvedEvents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getApprovedEvents(HttpServletRequest request)
+    {
+    	 try {
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
+     		List<Event> events = eventDao.getApprovedEvents();
      		if(events.isEmpty()){
                 return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
             }
@@ -213,10 +234,8 @@ public class EventController {
      		event.setEndTime(new Time(sdf.parse((String)json_object.get("endTime")).getTime()));
      		event.setOrganizer(requestUser);
      		if (Utils.orgnaziedByEventOrganizor(requestUser))
-     			event.setStatus(springrest.model.Event.Status.approved);
-     		else
-     			event.setStatus(springrest.model.Event.Status.submitted);
-     		System.out.println(event.getEndTime());;
+     			event.setStatus(1);
+     		event.setStatus(Integer.parseInt((String)json_object.get("status")));;
      		return new ResponseEntity<Event>(eventDao.saveEvent(event),HttpStatus.CREATED);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
@@ -247,15 +266,15 @@ public class EventController {
      		event.setOrganizer(requestUser);
      		if(((String)json_object.get("status")).equals("approved")) {
      			System.out.println((String)json_object.get("status"));
-     			event.setStatus(Event.Status.approved);
+     			event.setStatus(1);
      		}
      		if(((String)json_object.get("status")).equals("rejected")) {
      			System.out.println((String)json_object.get("status"));
-     			event.setStatus(Event.Status.rejected);
+     			event.setStatus(2);
      		}
      		if(((String)json_object.get("status")).equals("submitted")) {
      			System.out.println((String)json_object.get("status"));
-     			event.setStatus(Event.Status.submitted);
+     			event.setStatus(0);
      		}
    			return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
     	}  catch (Exception e) {
@@ -297,7 +316,7 @@ public class EventController {
     	   	Event event = eventDao.getEvent(id);
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-    		event.setStatus(springrest.model.Event.Status.approved);
+    		event.setStatus(1);
        		return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
@@ -315,7 +334,7 @@ public class EventController {
      		if (!Utils.proceedOnlyIfAdmin (requestUser))
      			throw new RestException(400, "Invalid Authorization");
     	   	Event event = eventDao.getEvent(id);
-    		event.setStatus(springrest.model.Event.Status.rejected);
+    		event.setStatus(2);
     		System.out.println(event.getId());
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);

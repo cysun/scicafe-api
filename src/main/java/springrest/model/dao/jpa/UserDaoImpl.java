@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import springrest.model.Program;
 import springrest.model.User;
 import springrest.model.dao.UserDao;
+import javax.persistence.Entity;
 
 @Repository
 public class UserDaoImpl implements UserDao {

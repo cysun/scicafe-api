@@ -17,7 +17,6 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import springrest.model.Event.Status;
 
 @Entity
 @Table(name = "rewards")
@@ -25,12 +24,10 @@ public class Reward implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 	
-	public enum Status {
-    	submitted, 
-    	approved,
-    	rejected,
-    	expired
-    }
+//	status 
+//	submitted  0 
+//	approved   1
+//	rejected   2
 
 	@Id
     @GeneratedValue
@@ -64,11 +61,11 @@ public class Reward implements Serializable{
     )
     Set<Event> events;
 	
-	@JsonBackReference
-	@ManyToOne(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
+//	@JsonBackReference
+	@ManyToOne
 	private User submitter;
 	
-	private Status status;
+	private int status;
 
 	public Long getId() {
 		return id;
@@ -142,11 +139,11 @@ public class Reward implements Serializable{
 		this.submitter = submitter;
 	}
 
-	public Status getStatus() {
+	public int getStatus() {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(int status) {
 		this.status = status;
 	}
 

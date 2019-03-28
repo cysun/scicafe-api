@@ -9,6 +9,7 @@ import javax.persistence.Persistence;
 
 import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import javax.persistence.Entity;
 
 public class SchemaExport {
 

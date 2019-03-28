@@ -3,6 +3,7 @@ package springrest.model.dao;
 import java.util.List;
 
 import springrest.model.User;
+import javax.persistence.Entity;
 
 public interface UserDao {
 

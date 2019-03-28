@@ -21,6 +21,7 @@ import springrest.model.User;
 import springrest.model.dao.RewardDao;
 import springrest.model.dao.UserDao;
 import springrest.util.Utils;
+import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -37,11 +38,11 @@ public class RewardController {
     public ResponseEntity<Reward> getReward( @PathVariable Long id,HttpServletRequest request)
     {
     	try {
-    		String token = request.getHeader("Authorization");
-     		Utils.decode(token).getClaim("userId").asLong();
-     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
-     			throw new RestException(400, "Invalid Authorization");
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
      		System.out.println("Fetching Reward with id " + id);
         	Reward reward = rewardDao.getReward(id);
         	if (reward == null) {
@@ -59,11 +60,30 @@ public class RewardController {
     public ResponseEntity<List<Reward>> getRewards(HttpServletRequest request)
     {
     	 try {
-    		String token = request.getHeader("Authorization");
-     		Utils.decode(token).getClaim("userId").asLong();
-     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
-     			throw new RestException(400, "Invalid Authorization");
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
+     		List<Reward> rewards = rewardDao.getRewards();
+     		if(rewards.isEmpty()){
+                return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Reward>>(rewards, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    }
+    
+    @RequestMapping(value = "/approvedRewards", method = RequestMethod.GET)
+    public ResponseEntity<List<Reward>> getApprovedRewards(HttpServletRequest request)
+    {
+    	 try {
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
      		List<Reward> rewards = rewardDao.getRewards();
      		if(rewards.isEmpty()){
                 return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
@@ -82,14 +102,13 @@ public class RewardController {
     		String token = request.getHeader("Authorization");
      		Utils.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
-     			throw new RestException(400, "Invalid Authorization");
-     		if (reward.getStartTime() == null || reward.getEndTime() == null || reward.getName() == null)
+//     		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
+     		if (reward.getName() == null || reward.getDescription() == null || reward.getCriteria() == null)
         		throw new RestException( 400, "missing required field(s)." );
      		if (Utils.providedByRewardProvider(requestUser))
-     			reward.setStatus(springrest.model.Reward.Status.approved);
-     		else
-     			reward.setStatus(springrest.model.Reward.Status.submitted);
+     			reward.setStatus(1);
+     		reward.setSubmitter(requestUser);
      		return new ResponseEntity<Reward>(rewardDao.saveReward(reward),HttpStatus.CREATED);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
@@ -154,7 +173,7 @@ public class RewardController {
     	   	Reward reward = rewardDao.getReward(id);
     		if (reward == null)
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
-    		reward.setStatus(springrest.model.Reward.Status.approved);
+    		reward.setStatus(1);
        		return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
@@ -172,7 +191,7 @@ public class RewardController {
      		if (!Utils.proceedOnlyIfAdmin (requestUser))
      			throw new RestException(400, "Invalid Authorization");
     	   	Reward reward = rewardDao.getReward(id);
-    		reward.setStatus(springrest.model.Reward.Status.rejected);
+    		reward.setStatus(2);
     		System.out.println(reward.getId());
     		if (reward == null)
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);

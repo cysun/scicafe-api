@@ -23,6 +23,7 @@ import springrest.model.User;
 import springrest.model.dao.ProgramDao;
 import springrest.model.dao.UserDao;
 import springrest.util.Utils;
+import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -39,11 +40,11 @@ public class ProgramController {
     public ResponseEntity<Program> getProgram( @PathVariable Long id ,HttpServletRequest request)
     {
     	try {
-    		String token = request.getHeader("Authorization");
-      		Utils.decode(token).getClaim("userId").asLong();
-      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-      		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
-      			throw new RestException(400, "Invalid Authorization");
+//    		String token = request.getHeader("Authorization");
+//      		Utils.decode(token).getClaim("userId").asLong();
+//      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//      		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//      			throw new RestException(400, "Invalid Authorization");
       		System.out.println("Fetching Program with id " + id);
         	Program program = programDao.getProgram(id);
         	if (program == null) {

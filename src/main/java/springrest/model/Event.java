@@ -27,12 +27,10 @@ public class Event implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 	
-	public enum Status {
-    	submitted, 
-    	approved,
-    	rejected,
-    	expired
-    }
+//	status 
+//	submitted  0 
+//	approved   1
+//	rejected   2
 	
 	@Id
     @GeneratedValue
@@ -52,13 +50,13 @@ public class Event implements Serializable{
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="HH:mm:ss")
 	private Time endTime;
 	
-	private Status status;
+	private int status;
 	
 	@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(
         name = "events_tags", 
-        joinColumns = { @JoinColumn(name = "tag_id") }, 
-        inverseJoinColumns = { @JoinColumn(name = "event_id") }
+        joinColumns = { @JoinColumn(name = "event_id") }, 
+        inverseJoinColumns = { @JoinColumn(name = "tag_id") }
     )
     Set<Tag> tags;
 	
@@ -106,11 +104,11 @@ public class Event implements Serializable{
 		this.location = location;
 	}
 
-	public Status getStatus() {
+	public int getStatus() {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(int status) {
 		this.status = status;
 	}
 

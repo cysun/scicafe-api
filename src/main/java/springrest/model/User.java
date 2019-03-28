@@ -61,9 +61,11 @@ public class User implements Serializable {
     
     private String title;
     
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "program_id", referencedColumnName = "id")
-    private Program program;
+    @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
+    @JoinTable(name = "users_programs",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "program_id"))
+    private Set<Program> programs;
     
     public String getUnit() {
 		return unit;
@@ -73,12 +75,12 @@ public class User implements Serializable {
 		this.unit = unit;
 	}
 
-	public Program getPrograms() {
-		return program;
+	public Set<Program> getPrograms() {
+		return this.programs;
 	}
 
-	public void setPrograms(Program programs) {
-		this.program = program;
+	public void setPrograms(Set<Program> programs) {
+		this.programs = programs;
 	}
 
 	private String unit;

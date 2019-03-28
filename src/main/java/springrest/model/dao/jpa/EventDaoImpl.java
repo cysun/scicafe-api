@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import springrest.model.Event;
 import springrest.model.dao.EventDao;
+import javax.persistence.Entity;
 
 @Repository
 public class EventDaoImpl implements EventDao {
@@ -27,6 +28,13 @@ public class EventDaoImpl implements EventDao {
     public List<Event> getEvents()
     {
         return entityManager.createQuery( "from Event order by id", Event.class )
+            .getResultList();
+    }
+    
+    @Override
+    public List<Event> getApprovedEvents()
+    {
+        return entityManager.createQuery( "select  e from Event e where e.status = 1 order by eventDate", Event.class )
             .getResultList();
     }
 

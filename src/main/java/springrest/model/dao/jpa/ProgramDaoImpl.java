@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import springrest.model.Program;
-import springrest.model.Program;
 import springrest.model.dao.ProgramDao;
+import javax.persistence.Entity;
 
 @Repository
 public class ProgramDaoImpl implements ProgramDao {

@@ -29,10 +29,13 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import springrest.api.error.RestException;
 import springrest.model.User;
+import springrest.model.Program;
 import springrest.model.Role;
+import springrest.model.dao.ProgramDao;
 import springrest.model.dao.UserDao;
 
 import springrest.util.Utils;
+import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -40,6 +43,9 @@ public class UserController {
 
     @Autowired
     private UserDao userDao;
+    
+    @Autowired
+    private ProgramDao programDao;
     
     // Get an user by id
     @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)
@@ -99,6 +105,7 @@ public class UserController {
         }
 		try {
 			Set<Role> roles = new HashSet<Role>();
+//			if (user.getRoles()==null) 
 			roles.add(new Role(new Long(0),"REGULAR"));
 			System.out.println(roles);
 			user.setRoles(roles);
@@ -136,20 +143,69 @@ public class UserController {
    			String token = request.getHeader("Authorization");
     		Utils.decode(token).getClaim("userId").asLong();
     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-    		if (!Utils.proceedOnlyIfAdmin(requestUser) || requestUser.getId() == id)
+    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
     			throw new RestException(400, "Invalid Authorization");
     		System.out.println("Updating User " + id);
        		User user = userDao.getUser(id);
     		if (user == null)
-    				return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
    			user.setFirstName(newUser.getFirstName());
    			user.setLastName(newUser.getLastName());
    			user.setEmail(newUser.getEmail());
+   			System.out.println(newUser.getPosition());
    			user.setPosition(newUser.getPosition());
    			user.setUnit(newUser.getUnit());
-   			user.setUsername(newUser.getUsername());
-   			user.setPassword(newUser.getPassword());
+   			if (!newUser.getPassword().equals("") && newUser.getPassword()!=null)
+   				user.setPassword(BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt(10)));
    			user.setTitle(newUser.getTitle());
+   			return new ResponseEntity<User>(userDao.saveUser(user), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
+   	
+   	//delete user program
+   	@RequestMapping(value = "/addUserProgram/{id}/{pid}", method = RequestMethod.PUT)
+   	public ResponseEntity<User> deleteUserProgram(@PathVariable Long id, @PathVariable Long pid,HttpServletRequest request) {
+   		try {
+   			String token = request.getHeader("Authorization");
+    		Utils.decode(token).getClaim("userId").asLong();
+    		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
+    			throw new RestException(400, "Invalid Authorization");
+    		System.out.println("Updating User " + id + pid);
+       		User user = userDao.getUser(id);
+    		if (user == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		Program program = programDao.getProgram(pid);
+    		System.out.println(program.getFullName()+user.getFirstName());
+    		if (program == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		user.getPrograms().add(program);
+   			return new ResponseEntity<User>(userDao.saveUser(user), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
+   	
+	//delete user program
+   	@RequestMapping(value = "/deleteUserProgram/{id}/{pid}", method = RequestMethod.PUT)
+   	public ResponseEntity<User> addUserProgram(@PathVariable Long id, @PathVariable Long pid,HttpServletRequest request) {
+   		try {
+   			String token = request.getHeader("Authorization");
+    		Utils.decode(token).getClaim("userId").asLong();
+    		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
+    			throw new RestException(400, "Invalid Authorization");
+    		System.out.println("Updating User " + id + pid);
+       		User user = userDao.getUser(id);
+    		if (user == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		Program program = programDao.getProgram(pid);
+    		System.out.println(program.getFullName()+user.getFirstName());
+    		if (program == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		user.getPrograms().remove(program);
    			return new ResponseEntity<User>(userDao.saveUser(user), HttpStatus.OK);
    		} catch (Exception e) {
    			throw new RestException(400, e.getMessage());

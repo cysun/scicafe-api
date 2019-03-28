@@ -23,6 +23,7 @@ import springrest.model.User;
 import springrest.model.dao.TagDao;
 import springrest.model.dao.UserDao;
 import springrest.util.Utils;
+import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController

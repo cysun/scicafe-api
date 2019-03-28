@@ -18,6 +18,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import springrest.model.Role;
 import springrest.model.User;
 import springrest.model.dao.UserDao;
+import javax.persistence.Entity;
 
 public class Utils {
 

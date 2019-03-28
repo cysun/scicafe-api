@@ -1,5 +1,7 @@
 package springrest.api.error;
 
+import javax.persistence.Entity;
+
 public class RestError {
 
     int statusCode;

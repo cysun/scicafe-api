@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import springrest.model.Reward;
 import springrest.model.dao.RewardDao;
+import javax.persistence.Entity;
 
 @Repository
 public class RewardDaoImpl implements RewardDao {
@@ -29,7 +30,13 @@ public class RewardDaoImpl implements RewardDao {
         return entityManager.createQuery( "from Reward order by id", Reward.class )
             .getResultList();
     }
-
+    
+    @Override
+    public List<Reward> getApprovedRewards() {
+    	return entityManager.createQuery( "select r from Reward r where r.status=1 order by id", Reward.class )
+                .getResultList();
+    }
+    
     @Override
     @Transactional
     public Reward saveReward( Reward reward )

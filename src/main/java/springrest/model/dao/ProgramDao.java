@@ -2,7 +2,8 @@ package springrest.model.dao;
 
 import java.util.List;
 
-import springrest.model.Program;;
+import springrest.model.Program;
+import javax.persistence.Entity;;
 
 public interface ProgramDao {
 

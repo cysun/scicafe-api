@@ -1,5 +1,7 @@
 package springrest.api.error;
 
+import javax.persistence.Entity;
+
 public class RestException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

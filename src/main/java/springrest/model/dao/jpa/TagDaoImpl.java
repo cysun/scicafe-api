@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import springrest.model.Tag;
 import springrest.model.dao.TagDao;
+import javax.persistence.Entity;
 
 @Repository
 public class TagDaoImpl implements TagDao {

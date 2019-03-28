@@ -4,7 +4,7 @@ create table hibernate_sequence (
 
 create table programs (
        id bigint not null,
-        description varchar(255) not null,
+        description text not null,
         fullName varchar(255) not null,
         name varchar(255) not null,
         primary key (id)
@@ -27,7 +27,7 @@ create table users (
 
 create table events (
        id bigint not null,
-        description varchar(255),
+        description text,
         eventDate date,
         endTime time,
         name varchar(255),
@@ -47,7 +47,7 @@ create table tags (
 
 create table rewards (
        id bigint not null,
-        description varchar(255),
+        description varchar(2000),
         endTime datetime(6),
         name varchar(255),
         providerName varchar(255),
@@ -112,5 +112,16 @@ create table rewards_tags (
         primary key (reward_id, tag_id),
         foreign key (reward_id) references rewards (id),
         foreign key (tag_id) references tags (id)
+);
+
+create table news (
+       id bigint not null,
+        author varchar(255) not null,
+        content text not null,
+        imageUrl varchar(255),
+        isTop varchar(255) not null,
+        postedDate datetime(6) not null,
+        title varchar(255) not null,
+        primary key (id)
 );
 
