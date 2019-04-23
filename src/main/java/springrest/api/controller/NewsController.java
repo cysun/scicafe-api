@@ -1,6 +1,7 @@
 package springrest.api.controller;
 
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -9,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,8 +18,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import springrest.api.error.RestException;
 import springrest.model.News;
@@ -26,7 +30,11 @@ import springrest.model.News;
 import springrest.model.User;
 import springrest.model.dao.NewsDao;
 import springrest.model.dao.UserDao;
+import springrest.model.service.NewsImageService;
 import springrest.util.Utils;
+
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.HttpHeaders;
 import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -38,6 +46,9 @@ public class NewsController {
 	
 	@Autowired
     private NewsDao newsDao;
+	
+	@Autowired
+	private NewsImageService newsImageService;
 	
 	@RequestMapping(value = "/news/{id}", method = RequestMethod.GET)
     public ResponseEntity<News> getNews( @PathVariable Long id)
@@ -88,21 +99,48 @@ public class NewsController {
     
  // create a new news
     @RequestMapping(value = "/news", method = RequestMethod.POST)
-	public ResponseEntity<News> createNews(@RequestBody News news,HttpServletRequest request) {
-
-     		String token = request.getHeader("Authorization");
-      		Utils.decode(token).getClaim("userId").asLong();
-      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-      		if (!Utils.proceedOnlyIfAdmin(requestUser))
-      			throw new RestException(400, "Invalid Authorization");
-      		System.out.println("Creating News " + news.getTitle());
-      		if (news.getIsTop()==null)
-      			news.setIsTop("No");
-      		news.setPostedDate(new Timestamp(System.currentTimeMillis()));
-        	if (news.getTitle() == null || news.getAuthor() == null || news.getContent() == null)
-        		throw new RestException( 400, "missing required field(s)." );
-        	return new ResponseEntity<News>(newsDao.saveNews(news),HttpStatus.CREATED);
+	public ResponseEntity<News> createNews(HttpServletRequest request,@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("author") String author,@RequestParam("title") String title,@RequestParam("content") String content,@RequestParam("isTop") String isTop) {
+    	try {
+    			News news = new News();
+         		String token = request.getHeader("Authorization");
+          		Utils.decode(token).getClaim("userId").asLong();
+          		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+          		if (!Utils.proceedOnlyIfAdmin(requestUser))
+          			throw new RestException(400, "Invalid Authorization");
+          		news.setAuthor(author);
+          		news.setContent(content);
+          		news.setTitle(title);
+          		news.setIsTop(isTop);
+          		System.out.println("Creating News " + news.getTitle());
+          		if (isTop==null)
+          			news.setIsTop("No");
+          		news.setPostedDate(new Timestamp(System.currentTimeMillis()));
+            	if (news.getTitle() == null || news.getAuthor() == null || news.getContent() == null)
+            		throw new RestException( 400, "missing required field(s)." );
+            	if (image == null||image.isEmpty()) {
+            		System.out.println("xxxxxxxxxxxxxxxx");
+            		news.setImageUrl("assets/images/news/news226.png");
+            	} else {
+            		news = newsDao.saveNews(news);
+                	String fileName = image.getOriginalFilename();
+              		String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+                	news.setImageUrl("http://localhost:8080/springrest/api/news-image/news"+news.getId()+"."+fileType);
+                	this.newsImageService.store(image, "news"+news.getId());
+            	}
+            	return new ResponseEntity<News>(newsDao.saveNews(news),HttpStatus.CREATED);
+    	 	} catch (Exception e) {
+    	 		 throw new RestException(400, e.getMessage());
+    	 	}
 	}
+    
+    @RequestMapping(value = "/news-image/{imageName}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Resource> getFile(@PathVariable String imageName) {
+      Resource file = this.newsImageService.loadFile(imageName);
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+          .body(file);
+    }
     
  // edit a news
    	@RequestMapping(value = "/news/{id}", method = RequestMethod.PUT)

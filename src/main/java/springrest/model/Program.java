@@ -28,6 +28,17 @@ public class Program implements Serializable{
 	 
 	@Column(nullable = false)
 	private String description;
+	
+	@Column(nullable = true)
+	private String imageUrl;
+
+	public String getImageUrl() {
+		return imageUrl;
+	}
+
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
 
 	public Long getId() {
 		return id;

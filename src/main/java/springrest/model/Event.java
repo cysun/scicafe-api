@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -60,6 +61,17 @@ public class Event implements Serializable{
     )
     Set<Tag> tags;
 	
+	@Column(nullable = true)
+	private String imageUrl;
+	
+
+	public String getImageUrl() {
+		return imageUrl;
+	}
+
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
 
 	@ManyToOne
 	private User organizer;

@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,13 +19,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import springrest.api.error.RestException;
 import springrest.model.Event;
 import springrest.model.User;
 import springrest.model.dao.EventDao;
 import springrest.model.dao.UserDao;
+import springrest.model.service.EventImageService;
+import springrest.model.service.NewsImageService;
 import springrest.util.Utils;
 import javax.persistence.Entity;
 
@@ -36,6 +43,9 @@ public class EventController {
 	
 	@Autowired
     private UserDao userDao;
+	
+	@Autowired
+	private EventImageService eventImageService;
 
 	// Get an event by id
     @RequestMapping(value = "/event/{id}", method = RequestMethod.GET)
@@ -71,6 +81,28 @@ public class EventController {
 //     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
 //     			throw new RestException(400, "Invalid Authorization");
      		List<Event> events = eventDao.getEvents();
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    	 
+    }
+    
+    // Get all own events
+    @RequestMapping(value = "/ownevents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getOwnEvents(HttpServletRequest request)
+    {
+    	 try {
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular(requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
+    		String token = request.getHeader("Authorization");
+     		List<Event> events = eventDao.getOwnEvents(Utils.decode(token).getClaim("userId").asLong());
      		if(events.isEmpty()){
                 return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
             }
@@ -146,26 +178,26 @@ public class EventController {
    		}
     }
     
-    @RequestMapping(value = "/event/{id}/attendee", method = RequestMethod.POST)
-    public ResponseEntity<Set<User>> enrollEvent(@PathVariable Long id,HttpServletRequest request)
-    {
-    	try {
-    		String token = request.getHeader("Authorization");
-     		Utils.decode(token).getClaim("userId").asLong();
-     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
-     			throw new RestException(400, "Invalid Authorization");
-     		//User user = userDao.getUser(userId);
-        	Event event = eventDao.getEvent(id);
-        	if (event == null)
-    			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
-        	event.getAttendees().add(requestUser);
-    		eventDao.saveEvent(event);
-    		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
-    	}  catch (Exception e) {
-   		 	throw new RestException(400, e.getMessage());
-   		}
-    }
+//    @RequestMapping(value = "/event/{id}/attendee", method = RequestMethod.POST)
+//    public ResponseEntity<Set<User>> enrollEvent(@PathVariable Long id,HttpServletRequest request)
+//    {
+//    	try {
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
+//     		//User user = userDao.getUser(userId);
+//        	Event event = eventDao.getEvent(id);
+//        	if (event == null)
+//    			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
+//        	event.getAttendees().add(requestUser);
+//    		eventDao.saveEvent(event);
+//    		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
+//    	}  catch (Exception e) {
+//   		 	throw new RestException(400, e.getMessage());
+//   		}
+//    }
     
     @RequestMapping(value = "/event/{id}/attendee/username", method = RequestMethod.POST)
     public ResponseEntity<Set<User>> addAttendeeByUsername(@PathVariable Long id,@RequestBody JSONObject json_object,HttpServletRequest request)
@@ -176,7 +208,30 @@ public class EventController {
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
      		if (!Utils.proceedOnlyIfAdmin (requestUser))
      			throw new RestException(400, "Invalid Authorization");
+     		System.out.println((String)json_object.get("username"));
      		User user = userDao.getUserByUsername((String)json_object.get("username"));
+        	Event event = eventDao.getEvent(id);
+        	if (event == null)
+    			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
+        	event.getAttendees().add(user);
+    		eventDao.saveEvent(event);
+    		return new ResponseEntity<Set<User>>(event.getAttendees(), HttpStatus.OK);
+    	}  catch (Exception e) {
+   		 	throw new RestException(400, e.getMessage());
+   		}
+    }
+    
+    @RequestMapping(value = "/event/{id}/addAttendee/{userId}", method = RequestMethod.POST)
+    public ResponseEntity<Set<User>> addAttendeeByUserId(@PathVariable Long id,@PathVariable Long userId,HttpServletRequest request)
+    {
+    	System.out.println("wtfwtfwtf");
+    	try {
+//    		String token = request.getHeader("Authorization");
+//     		Utils.decode(token).getClaim("userId").asLong();
+//     		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//     		if (!Utils.proceedOnlyIfAdmin (requestUser))
+//     			throw new RestException(400, "Invalid Authorization");
+     		User user = userDao.getUser(userId);
         	Event event = eventDao.getEvent(id);
         	if (event == null)
     			return new ResponseEntity<Set<User>>(HttpStatus.NOT_FOUND);
@@ -212,30 +267,39 @@ public class EventController {
     
     // create a new event
     @RequestMapping(value = "/events", method = RequestMethod.POST)
-	public ResponseEntity<Event> createEvent(@RequestBody JSONObject json_object,HttpServletRequest request) {
+	public ResponseEntity<Event> createEvent(@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("name") String name,@RequestParam("location") String location,@RequestParam("description") String description,@RequestParam("eventDate") String eventDate,@RequestParam("startTime") String startTime,@RequestParam("endTime") String endTime,@RequestParam("status") String status,HttpServletRequest request) {
     	Event event = new Event();
-    	System.out.println("Creating Event " + json_object.get("name"));
+    	System.out.println(name);
     	try {
     		String token = request.getHeader("Authorization");
      		Utils.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
      		if (!Utils.proceedOnlyIfAdminOrRegular (requestUser))
      			throw new RestException(400, "Invalid Authorization");
-     		if (json_object.get("name") == null || json_object.get("startTime") == null || json_object.get("endTime") == null || json_object.get("location") == null
-     				||json_object.get("eventDate")== null||json_object.get("description")==null)
+     		if (name == null || startTime == null || endTime == null || location == null
+     				||eventDate == null||description == null)
         		throw new RestException( 400, "missing required field(s)." );
-     		event.setName((String)json_object.get("name"));
-     		event.setDescription((String)json_object.get("description"));
-     		event.setLocation((String)json_object.get("location"));
+     		event.setName(name);
+     		event.setDescription(description);
+     		event.setLocation(location);
      		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-     		event.setEventDate(sdf.parse((String) json_object.get("eventDate")));
+     		event.setEventDate(sdf.parse(eventDate));
      		sdf = new SimpleDateFormat("HH:mm");
-     		event.setStartTime(new Time(sdf.parse((String)json_object.get("startTime")).getTime()));
-     		event.setEndTime(new Time(sdf.parse((String)json_object.get("endTime")).getTime()));
+     		event.setStartTime(new Time(sdf.parse(startTime).getTime()));
+     		event.setEndTime(new Time(sdf.parse(endTime).getTime()));
      		event.setOrganizer(requestUser);
      		if (Utils.orgnaziedByEventOrganizor(requestUser))
      			event.setStatus(1);
-     		event.setStatus(Integer.parseInt((String)json_object.get("status")));;
+     		event.setStatus(Integer.parseInt(status));
+     		if (image==null||image.isEmpty()) {
+     			event.setImageUrl("assets/images/course/cu-4.jpg");
+     		} else {
+     			event = eventDao.saveEvent(event);
+     			String fileName = image.getOriginalFilename();
+          		String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+          		event.setImageUrl("http://localhost:8080/springrest/api/event-image/event"+event.getId()+"."+fileType);
+            	this.eventImageService.store(image, "event"+event.getId());
+     		}
      		return new ResponseEntity<Event>(eventDao.saveEvent(event),HttpStatus.CREATED);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
@@ -343,4 +407,13 @@ public class EventController {
    		 	throw new RestException(400, e.getMessage());
    		}
 	}
+	
+	@RequestMapping(value = "/event-image/{imageName}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Resource> getFile(@PathVariable String imageName) {
+      Resource file = this.eventImageService.loadFile(imageName);
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+          .body(file);
+    }
 }

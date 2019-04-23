@@ -1,5 +1,6 @@
 package springrest.model.dao.jpa;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -28,6 +29,13 @@ public class EventDaoImpl implements EventDao {
     public List<Event> getEvents()
     {
         return entityManager.createQuery( "from Event order by id", Event.class )
+            .getResultList();
+    }
+    
+    @Override
+    public List<Event> getOwnEvents(Long id)
+    {
+        return entityManager.createQuery( "select e from Event e where e.organizer.id = " + id + "order by id", Event.class )
             .getResultList();
     }
     

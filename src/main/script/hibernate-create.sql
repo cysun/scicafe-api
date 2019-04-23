@@ -7,6 +7,7 @@ create table programs (
         description text not null,
         fullName varchar(255) not null,
         name varchar(255) not null,
+        imageUrl varchar(255),
         primary key (id)
 );
 
@@ -35,6 +36,7 @@ create table events (
         startTime time,
         status integer,
         organizer_id bigint,
+        imageUrl varchar(255),
         primary key (id),
         foreign key (organizer_id) references users (id)
 );

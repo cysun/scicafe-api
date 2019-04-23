@@ -6,6 +6,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,8 +15,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import springrest.api.error.RestException;
 import springrest.model.Event;
@@ -22,6 +27,8 @@ import springrest.model.Program;
 import springrest.model.User;
 import springrest.model.dao.ProgramDao;
 import springrest.model.dao.UserDao;
+import springrest.model.service.EventImageService;
+import springrest.model.service.ProgramImageService;
 import springrest.util.Utils;
 import javax.persistence.Entity;
 
@@ -34,6 +41,9 @@ public class ProgramController {
 	
 	@Autowired
     private UserDao userDao;
+	
+	@Autowired
+	private ProgramImageService programImageService;
 
     // Get an program by id
     @RequestMapping(value = "/program/{id}", method = RequestMethod.GET)
@@ -74,23 +84,40 @@ public class ProgramController {
     
     // create a new program
     @RequestMapping(value = "/programs", method = RequestMethod.POST)
-	public ResponseEntity<Program> createProgram(@RequestBody Program program,HttpServletRequest request) {
-    	System.out.println(program.getDescription());
+	public ResponseEntity<Program> createProgram(HttpServletRequest request,@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("name") String name,@RequestParam("fullName") String fullName,@RequestParam("description") String description) {
+    		
 
-     		String token = request.getHeader("Authorization");
-      		Utils.decode(token).getClaim("userId").asLong();
-      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-      		if (!Utils.proceedOnlyIfAdmin(requestUser))
-      			throw new RestException(400, "Invalid Authorization");
-      		System.out.println("Creating Program " + program.getName());
-        	if (program.getName() == null || program.getFullName() == null || program.getDescription() == null )
-        		throw new RestException( 400, "missing required field(s)." );
-        	if (programDao.isProgramExists(program)) {
-                System.out.println("A Program with name " + program.getName() + " already exist");
-                return new ResponseEntity<Program>(HttpStatus.CONFLICT);
-            }
-        	return new ResponseEntity<Program>(programDao.saveProgram(program),HttpStatus.CREATED);
+        	try {
 
+        	    Program program = new Program();
+
+         		String token = request.getHeader("Authorization");
+          		Utils.decode(token).getClaim("userId").asLong();
+          		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+          		if (!Utils.proceedOnlyIfAdmin(requestUser))
+          			throw new RestException(400, "Invalid Authorization");
+          		program.setName(name);
+          		program.setFullName(fullName);
+          		program.setDescription(description);
+          		if (program.getName() == null || program.getFullName() == null || program.getDescription() == null)
+            		throw new RestException( 400, "missing required field(s)." );
+          		System.out.println("Creating Program " + program.getName());
+            	if (program.getName() == null || program.getFullName() == null || program.getDescription() == null )
+            		throw new RestException( 400, "missing required field(s)." );
+            	if (image == null||image.isEmpty()) {
+            		System.out.println("xxxxxxxxxxxxxxxx");
+            		program.setImageUrl("assets/images/news/news226.png");
+            	} else {
+            		program = programDao.saveProgram(program);
+                	String fileName = image.getOriginalFilename();
+              		String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+              		program.setImageUrl("http://localhost:8080/springrest/api/program-image/program"+program.getId()+"."+fileType);
+                	this.programImageService.store(image, "program"+program.getId());
+            	}
+            	return new ResponseEntity<Program>(programDao.saveProgram(program),HttpStatus.CREATED);
+        	} catch (Exception e) {
+   	 		 throw new RestException(400, e.getMessage());
+   	 		}
     	
 	}
     
@@ -137,6 +164,15 @@ public class ProgramController {
         	throw new RestException(400, e.getMessage());
         }
         
+    }
+ 	
+ 	@RequestMapping(value = "/program-image/{imageName}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Resource> getFile(@PathVariable String imageName) {
+      Resource file = this.programImageService.loadFile(imageName);
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+          .body(file);
     }
 	
 }

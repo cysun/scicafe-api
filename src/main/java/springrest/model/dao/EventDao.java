@@ -12,6 +12,8 @@ public interface EventDao {
 
     List<Event> getEvents();
     
+    List<Event> getOwnEvents(Long id);
+    
     List<Event> getApprovedEvents();
 
     Event saveEvent ( Event  event);

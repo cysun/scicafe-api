@@ -7,7 +7,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "news")
@@ -46,7 +49,7 @@ public class News implements Serializable {
 	
 	@Column(nullable = false) 
 	private Timestamp postedDate;
-	
+
 	public Long getId() {
 		return id;
 	}

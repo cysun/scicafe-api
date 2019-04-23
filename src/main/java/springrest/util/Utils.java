@@ -106,7 +106,7 @@ public class Utils {
 		    Algorithm algorithm = Algorithm.HMAC256(SECRET);
 		    String jwtToken = JWT.create()
 		    	.withIssuedAt(new Date(System.currentTimeMillis()))
-		    	.withExpiresAt(new Date(System.currentTimeMillis() + (60 * 60 * 1000)))//expire in 1 hour
+		    	.withExpiresAt(new Date(System.currentTimeMillis() + (3 * 60 * 60 * 1000)))//expire in 1 hour
 		        .withIssuer("auth0")
 		        .withClaim("userId", user.getId())
 		        .withClaim("firstName", user.getFirstName())

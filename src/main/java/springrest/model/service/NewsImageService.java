@@ -1,4 +1,4 @@
-package springrest.model.dao.jpa;
+package springrest.model.service;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -6,34 +6,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Repository;
-
-import springrest.model.News;
-import springrest.model.dao.NewsDao;
-
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.Entity;
-
-@Repository
-public class NewsDaoImpl implements NewsDao {
+@Service
+public class NewsImageService {
 	
-	Logger log = LoggerFactory.getLogger(this.getClass().getName());
+
+	  Logger log = LoggerFactory.getLogger(this.getClass().getName());
 	  private final Path rootLocation = Paths.get("news-images");
 	 
 	  public void store(MultipartFile file,String imageName) {
-		System.out.println(rootLocation.toString());
+		 
+		if (Files.notExists(this.rootLocation)) {
+			init();
+		}
 	    try {
 	      Files.copy(file.getInputStream(), this.rootLocation.resolve(imageName), StandardCopyOption.REPLACE_EXISTING);
 	    } catch (Exception e) {
@@ -55,6 +48,10 @@ public class NewsDaoImpl implements NewsDao {
 	    }
 	  }
 	 
+	  public void deleteAll() {
+	    FileSystemUtils.deleteRecursively(rootLocation.toFile());
+	  }
+	 
 	  public void init() {
 	    try {
 	      Files.createDirectory(rootLocation);
@@ -62,49 +59,5 @@ public class NewsDaoImpl implements NewsDao {
 	      throw new RuntimeException("Could not initialize storage!");
 	    }
 	  }
-
-	@PersistenceContext
-    private EntityManager entityManager;
 	
-	@Override
-	public News getNews(Long id) {
-
-		return entityManager.find( News.class, id );
-	}
-
-	@Override
-	public List<News> getAllNews() {
-
-		return entityManager.createQuery( "from News order by postedDate", News.class )
-	            .getResultList();
-	}
-
-	@Override
-	@Transactional
-	public News saveNews(News news) {
-		
-		return entityManager.merge( news );
-		
-	}
-
-	@Override
-	@Transactional
-	public boolean deleteNews(News news) {
-		
-		try {
-    		entityManager.remove(news);
-    		return true;
-    	} catch (Exception e) {
-    		return false;
-    	}
-		
-	}
-
-	@Override
-	public List<News> getTopNews() {
-		
-		return entityManager.createQuery( "select n from News n where n.isTop='Yes' order by postedDate asc", News.class )
-	            .getResultList();
-	}
-
 }
