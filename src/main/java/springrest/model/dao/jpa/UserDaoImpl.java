@@ -42,6 +42,17 @@ public class UserDaoImpl implements UserDao {
 			return null;
 		}
     }
+    
+    @Override
+    public User getUserByEmail(String email)
+    {
+    	try {
+			return entityManager.createQuery("from User WHERE email = ?1", User.class).setParameter(1, email)
+					.getSingleResult();
+		} catch (Exception e) {
+			return null;
+		}
+    }
 
     @Override
     @Transactional

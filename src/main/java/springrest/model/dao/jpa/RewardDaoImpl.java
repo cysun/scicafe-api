@@ -8,7 +8,9 @@ import javax.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import springrest.model.Event;
 import springrest.model.Reward;
+import springrest.model.Tag;
 import springrest.model.dao.RewardDao;
 import javax.persistence.Entity;
 
@@ -61,4 +63,14 @@ public class RewardDaoImpl implements RewardDao {
    		return entityManager.contains(reward);
    	}
 
+   	public Reward getPotentialRewards(Long id) {
+   		//return entityManager.createNativeQuery(" ", Reward.class);
+   		return null;
+   	}
+
+	@Override
+	public List<Reward> getOwnRewards(Long id) {
+		return entityManager.createQuery( "select r from Reward r where r.submitter.id = " + id + "order by id", Reward.class )
+	            .getResultList();
+	}
 }

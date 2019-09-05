@@ -45,7 +45,7 @@ public class User implements Serializable {
     @Column(nullable = false)
     private String lastName;
     
-    @Column(nullable = false)
+
     @Enumerated(EnumType.STRING)
     private Position position;
 

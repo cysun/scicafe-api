@@ -12,6 +12,8 @@ public interface UserDao {
     public List<User> getUsers();
     
     public User getUserByUsername( String username );
+    
+    public User getUserByEmail( String email );
 
     public User saveUser( User user );
     

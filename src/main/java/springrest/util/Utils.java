@@ -93,6 +93,23 @@ public class Utils {
 		}
 	}
 	
+	public static String generateVerificationCode() {
+		String code = "";
+		for (int i = 0; i < 4; i++) {
+			code += (int)(Math.random()*9);
+		}
+		return code;
+	}
+	
+	public static String generatePassword() {
+		String password = "";
+		char[] alphabet = "abcdefghijk~@#lmnopqrvwxyzABCD$%.EFGHIstuJK234LMNOPQRSTUVWXYZ0156789".toCharArray();
+		for (int i = 0; i < 10; i++) {
+			password += alphabet[(int)(Math.random()*68)];
+		}
+		return password;
+	}
+	
 	public static String generateToken(User user) {
 		try {
 			Set<Role> roles = user.getRoles();
@@ -106,7 +123,7 @@ public class Utils {
 		    Algorithm algorithm = Algorithm.HMAC256(SECRET);
 		    String jwtToken = JWT.create()
 		    	.withIssuedAt(new Date(System.currentTimeMillis()))
-		    	.withExpiresAt(new Date(System.currentTimeMillis() + (3 * 60 * 60 * 1000)))//expire in 1 hour
+		    	.withExpiresAt(new Date(System.currentTimeMillis() + (3 * 60 * 60 * 1000)))//expire in 3 hours
 		        .withIssuer("auth0")
 		        .withClaim("userId", user.getId())
 		        .withClaim("firstName", user.getFirstName())

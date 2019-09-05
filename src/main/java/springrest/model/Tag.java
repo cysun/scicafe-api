@@ -10,8 +10,12 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "tags")
@@ -25,6 +29,30 @@ public class Tag implements Serializable{
 
     @Column(nullable = false, unique = true)
     private String name;
+    
+	@JsonIgnore
+	@ManyToMany(mappedBy="tags" )
+    Set<Event> events;
+    
+    public Set<Reward> getRewards() {
+		return rewards;
+	}
+
+	public void setRewards(Set<Reward> rewards) {
+		this.rewards = rewards;
+	}
+
+	@JsonIgnore
+	@ManyToMany(mappedBy="tags" )
+    Set<Reward> rewards;
+
+	public Set<Event> getEvents() {
+		return events;
+	}
+
+	public void setEvents(Set<Event> events) {
+		this.events = events;
+	}
 
 	public Long getId() {
 		return id;

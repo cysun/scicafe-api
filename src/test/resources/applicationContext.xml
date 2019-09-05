@@ -12,7 +12,7 @@
 
     <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
         <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
-        <property name="url" value="jdbc:mysql://localhost/sci-cafe?allowPublicKeyRetrieval=true&amp;useSSL=false&amp;serverTimezone=UTC" />
+        <property name="url" value="jdbc:mysql://localhost/sci-cafe?allowPublicKeyRetrieval=true&amp;useSSL=false&amp;serverTimezone=GMT-7" />
         <property name="username" value="root" />
         <property name="password" value="" />
     </bean>

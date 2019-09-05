@@ -62,11 +62,11 @@ public class TagController {
     public ResponseEntity<List<Tag>> getTags(HttpServletRequest request)
     {
          try {
-     		String token = request.getHeader("Authorization");
-      		Utils.decode(token).getClaim("userId").asLong();
-      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-      		if (!Utils.proceedOnlyIfAdmin(requestUser))
-      			throw new RestException(400, "Invalid Authorization");
+//     		String token = request.getHeader("Authorization");
+//      		Utils.decode(token).getClaim("userId").asLong();
+//      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//      		if (!Utils.proceedOnlyIfAdmin(requestUser))
+//      			throw new RestException(400, "Invalid Authorization");
       		List<Tag> tags = tagDao.getTags();
       		if(tags.isEmpty()){
                 return new ResponseEntity<List<Tag>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND

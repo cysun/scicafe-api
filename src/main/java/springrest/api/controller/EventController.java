@@ -26,11 +26,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import springrest.api.error.RestException;
 import springrest.model.Event;
+import springrest.model.Program;
+import springrest.model.Tag;
 import springrest.model.User;
 import springrest.model.dao.EventDao;
+import springrest.model.dao.TagDao;
 import springrest.model.dao.UserDao;
 import springrest.model.service.EventImageService;
 import springrest.model.service.NewsImageService;
+import springrest.util.MailUtils;
 import springrest.util.Utils;
 import javax.persistence.Entity;
 
@@ -43,6 +47,9 @@ public class EventController {
 	
 	@Autowired
     private UserDao userDao;
+	
+	@Autowired
+    private TagDao tagDao;
 	
 	@Autowired
 	private EventImageService eventImageService;
@@ -224,7 +231,6 @@ public class EventController {
     @RequestMapping(value = "/event/{id}/addAttendee/{userId}", method = RequestMethod.POST)
     public ResponseEntity<Set<User>> addAttendeeByUserId(@PathVariable Long id,@PathVariable Long userId,HttpServletRequest request)
     {
-    	System.out.println("wtfwtfwtf");
     	try {
 //    		String token = request.getHeader("Authorization");
 //     		Utils.decode(token).getClaim("userId").asLong();
@@ -288,9 +294,13 @@ public class EventController {
      		event.setStartTime(new Time(sdf.parse(startTime).getTime()));
      		event.setEndTime(new Time(sdf.parse(endTime).getTime()));
      		event.setOrganizer(requestUser);
+     		if (status == null) {
+     			event.setStatus(0);
+     		} else {
+     			event.setStatus(Integer.parseInt(status));
+     		}
      		if (Utils.orgnaziedByEventOrganizor(requestUser))
      			event.setStatus(1);
-     		event.setStatus(Integer.parseInt(status));
      		if (image==null||image.isEmpty()) {
      			event.setImageUrl("assets/images/course/cu-4.jpg");
      		} else {
@@ -354,9 +364,9 @@ public class EventController {
     		String token = request.getHeader("Authorization");
      		Utils.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdmin (requestUser))
-     			throw new RestException(400, "Invalid Authorization");
      		Event event = eventDao.getEvent(id);
+     		if (!Utils.proceedOnlyIfAdmin (requestUser) && !event.getOrganizer().getId().equals(requestUser.getId()))
+     			throw new RestException(400, "Invalid Authorization");
             if (event == null) {
                 System.out.println("Unable to delete. Event with id " + id + " not found");
                 return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
@@ -378,10 +388,14 @@ public class EventController {
      		if (!Utils.proceedOnlyIfAdmin (requestUser))
      			throw new RestException(400, "Invalid Authorization");
     	   	Event event = eventDao.getEvent(id);
+    	   
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
     		event.setStatus(1);
-       		return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
+    		eventDao.saveEvent(event);
+    		String email = event.getOrganizer().getEmail();
+    	   	MailUtils.sendMail(email, "Your event " + event.getName() + " has been approved", "Congratulations!Your event application has been approved");
+       		return new ResponseEntity<Event>(event, HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
    		}
@@ -398,11 +412,14 @@ public class EventController {
      		if (!Utils.proceedOnlyIfAdmin (requestUser))
      			throw new RestException(400, "Invalid Authorization");
     	   	Event event = eventDao.getEvent(id);
-    		event.setStatus(2);
     		System.out.println(event.getId());
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-       		return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
+    		event.setStatus(2);
+    		eventDao.saveEvent(event);
+    		String email = event.getOrganizer().getEmail();
+    	   	MailUtils.sendMail(email, "Your event " + event.getName() + " has been rejected", "Sorry.Your event application has been rejected.");
+    	   	return new ResponseEntity<Event>(event, HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
    		}
@@ -416,4 +433,26 @@ public class EventController {
           .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
           .body(file);
     }
+	
+	//delete user program
+   	@RequestMapping(value = "/addEventTag/{id}/{tid}", method = RequestMethod.PUT)
+   	public ResponseEntity<Event> addEventTag(@PathVariable Long id, @PathVariable Long tid,HttpServletRequest request) {
+   		try {
+//   			String token = request.getHeader("Authorization");
+//    		Utils.decode(token).getClaim("userId").asLong();
+//    		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
+//    			throw new RestException(400, "Invalid Authorization");
+       		Event event = eventDao.getEvent(id);
+    		if (event == null)
+    			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
+    		Tag tag = tagDao.getTag(tid);
+    		if (tag == null)
+    			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
+    		event.getTags().add(tag);
+   			return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
 }

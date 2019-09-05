@@ -30,11 +30,16 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import springrest.api.error.RestException;
 import springrest.model.User;
 import springrest.model.Program;
+import springrest.model.Reward;
 import springrest.model.Role;
 import springrest.model.dao.ProgramDao;
+import springrest.model.dao.RoleDao;
 import springrest.model.dao.UserDao;
-
+import springrest.util.MailUtils;
 import springrest.util.Utils;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.persistence.Entity;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -46,6 +51,9 @@ public class UserController {
     
     @Autowired
     private ProgramDao programDao;
+    
+    @Autowired
+    private RoleDao roleDao;
     
     // Get an user by id
     @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)
@@ -64,6 +72,41 @@ public class UserController {
                 return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
             }
             return new ResponseEntity<User>(user, HttpStatus.OK);
+    	} catch (Exception e) {
+    		throw new RestException(400, e.getMessage());
+    	}
+    	
+    }
+    
+    // is Username exists
+    @RequestMapping(value = "/username/{username}", method = RequestMethod.GET)
+    public Boolean isUsernameExists( @PathVariable String username ,HttpServletRequest request)
+    {
+    	System.out.println("xxxxxx");
+    	try {
+        	User user = userDao.getUserByUsername(username);
+        	if (user == null) 
+        		return false;
+        	else
+        		return true;
+    	} catch (Exception e) {
+    		throw new RestException(400, e.getMessage());
+    	}
+    	
+    }
+    
+    // is email exists
+    @RequestMapping(value = "/email/{email}", method = RequestMethod.GET)
+    public Boolean isEmailExists( @PathVariable String email ,HttpServletRequest request)
+    {
+    	email = email.replace("itsadot426", ".");
+    	System.out.println(email);
+    	try {
+        	User user = userDao.getUserByEmail(email);
+        	if (user == null) 
+        		return false;
+        	else
+        		return true;
     	} catch (Exception e) {
     		throw new RestException(400, e.getMessage());
     	}
@@ -96,8 +139,8 @@ public class UserController {
     @RequestMapping(value = "/register", method = RequestMethod.POST)
 	public ResponseEntity<User> createUser(@RequestBody User user) {
     	System.out.println("Creating User " + user.getFirstName() + " " + user.getLastName());
-    	if (user.getFirstName() == null || user.getLastName() == null || user.getPosition() == null || user.getUnit() == null 
-    			|| user.getUsername() == null || user.getPassword() == null || user.getEmail() == null)
+    	if (user.getFirstName() == null || user.getLastName() == null || user.getUsername() == null 
+    			|| user.getPassword() == null || user.getEmail() == null)
     		throw new RestException( 400, "missing required field(s)." );
     	if (userDao.isUserExists(user)) {
             System.out.println("A User with name " + user.getFirstName() + " " + user.getLastName() + " already exist");
@@ -115,6 +158,50 @@ public class UserController {
 			throw new RestException(400, e.getMessage());
 		}
 	}
+    
+    @RequestMapping(value = "/verify/{email}", method = RequestMethod.GET)
+    public JSONObject verifyEmail(@PathVariable String email,HttpServletRequest request) {
+    	
+    	JSONObject token = new JSONObject();
+    	String code =  Utils.generateVerificationCode();
+    	token.put("email",email);
+    	token.put("code",code);
+    	email = email.replace("itsadot426", ".");
+
+    	try {
+			MailUtils.sendMail(email, "Verication Code From Sci-Cafe", code);
+		} catch (AddressException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MessagingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return token;
+    }
+    
+    @RequestMapping(value = "/resetPassword/{email}", method = RequestMethod.GET)
+    public Boolean resetPassword(@PathVariable String email,HttpServletRequest request) {
+    	System.out.println("resetting password");
+    	email = email.replace("itsadot426", ".");
+    	String password = Utils.generatePassword();
+    	try {
+			User user = userDao.getUserByEmail(email);
+			user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
+			userDao.saveUser(user);
+			MailUtils.sendMail(email, "Your password have been reset", "Your username is " + user.getUsername() + " . And"
+					+ "your password have been reset to " + password + ".");
+			return true;
+		} catch (AddressException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (MessagingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+    }
     
     //Login
     @RequestMapping(value = "/login", method = RequestMethod.POST)
@@ -212,6 +299,52 @@ public class UserController {
    		}
    	}
    	
+  //delete user program
+   	@RequestMapping(value = "/addUserRole/{id}/{rid}", method = RequestMethod.PUT)
+   	public ResponseEntity<User> AddUserRole(@PathVariable Long id, @PathVariable Long rid,HttpServletRequest request) {
+   		try {
+   			String token = request.getHeader("Authorization");
+    		Utils.decode(token).getClaim("userId").asLong();
+    		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
+    			throw new RestException(400, "Invalid Authorization");
+    		System.out.println("Updating User " + id + rid);
+       		User user = userDao.getUser(id);
+    		if (user == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		Role role = roleDao.getRole(rid);
+    		if (role == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		user.getRoles().add(role);
+   			return new ResponseEntity<User>(userDao.saveUser(user), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
+   	
+  //delete user program
+   	@RequestMapping(value = "/deleteUserRole/{id}/{rid}", method = RequestMethod.PUT)
+   	public ResponseEntity<User> deleteUserRole(@PathVariable Long id, @PathVariable Long rid,HttpServletRequest request) {
+   		try {
+   			String token = request.getHeader("Authorization");
+    		Utils.decode(token).getClaim("userId").asLong();
+    		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
+    			throw new RestException(400, "Invalid Authorization");
+    		System.out.println("Updating User " + id + rid);
+       		User user = userDao.getUser(id);
+    		if (user == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		Role role = roleDao.getRole(rid);
+    		if (role == null)
+    			return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
+    		user.getRoles().remove(role);
+   			return new ResponseEntity<User>(userDao.saveUser(user), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
+   	
     // delete a user
  	@RequestMapping(value = "/user/{id}", method = RequestMethod.DELETE)
  	public ResponseEntity<User> deleteUser(@PathVariable("id") long id,HttpServletRequest request) {
@@ -233,6 +366,7 @@ public class UserController {
         	throw new RestException(400, e.getMessage());
         }   
     }
+ 	
  	
  	@RequestMapping(value = "/profile", method = RequestMethod.GET)
  	public ResponseEntity<User> getUserProfile( HttpServletRequest request) {

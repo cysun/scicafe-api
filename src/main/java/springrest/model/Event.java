@@ -20,6 +20,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -84,6 +85,18 @@ public class Event implements Serializable{
     )
 	Set<User> attendees;
 	
+	@JsonIgnore
+	@ManyToMany(mappedBy="events" )
+    Set<Reward> rewards;
+	
+	public Set<Reward> getRewards() {
+		return rewards;
+	}
+
+	public void setRewards(Set<Reward> rewards) {
+		this.rewards = rewards;
+	}
+
 	public Set<User> getAttendees() {
 		return attendees;
 	}
