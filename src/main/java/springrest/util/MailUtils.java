@@ -29,7 +29,7 @@ public class MailUtils {
 				@Override
 				protected PasswordAuthentication getPasswordAuthentication() {
 					// TODO Auto-generated method stub
-					return new PasswordAuthentication("chenyii426@gmail.com","wjdh85247890");
+					return new PasswordAuthentication("email","password");
 				}
 			});
 			
