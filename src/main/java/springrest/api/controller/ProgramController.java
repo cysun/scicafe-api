@@ -123,7 +123,7 @@ public class ProgramController {
     
     // edit a program
    	@RequestMapping(value = "/program/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<Program> updateProgram(@PathVariable Long id, @RequestBody Program newProgram,HttpServletRequest request) {
+   	public ResponseEntity<Program> updateProgram(@PathVariable Long id, HttpServletRequest request,@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("name") String name,@RequestParam("fullName") String fullName,@RequestParam("description") String description) {
    		try {
    			String token = request.getHeader("Authorization");
       		Utils.decode(token).getClaim("userId").asLong();
@@ -132,11 +132,19 @@ public class ProgramController {
       			throw new RestException(400, "Invalid Authorization");
       		System.out.println("Updating Program " + id);
        		Program program = programDao.getProgram(id);
-    		if (program == null)
+    		if (program == null) {
+    			System.out.println("xxx");
     			return new ResponseEntity<Program>(HttpStatus.NOT_FOUND);
-    		program.setName(newProgram.getName());
-   			program.setFullName(newProgram.getFullName());
-   			program.setDescription(newProgram.getDescription());
+    		}
+    		if (image != null && !image.isEmpty()) {
+            	String fileName = image.getOriginalFilename();
+          		String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+          		program.setImageUrl("http://localhost:8080/springrest/api/program-image/program"+program.getId()+"."+fileType);
+            	this.programImageService.store(image, "program"+program.getId());
+        	}
+    		program.setName(name);
+   			program.setFullName(fullName);
+   			program.setDescription(description);
    			return new ResponseEntity<Program>(programDao.saveProgram(program), HttpStatus.OK);
    		} catch (Exception e) {
    			throw new RestException(400, e.getMessage());

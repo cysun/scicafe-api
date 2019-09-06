@@ -144,7 +144,7 @@ public class NewsController {
     
  // edit a news
    	@RequestMapping(value = "/news/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<News> updateNews(@PathVariable Long id, @RequestBody News newNews,HttpServletRequest request) {
+   	public ResponseEntity<News> updateNews(@PathVariable Long id, HttpServletRequest request,@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("author") String author,@RequestParam("title") String title,@RequestParam("content") String content,@RequestParam("isTop") String isTop) {
    		try {
    			String token = request.getHeader("Authorization");
       		Utils.decode(token).getClaim("userId").asLong();
@@ -155,11 +155,16 @@ public class NewsController {
        		News news = newsDao.getNews(id);
     		if (news == null)
     			return new ResponseEntity<News>(HttpStatus.NOT_FOUND);
-    		news.setAuthor(newNews.getAuthor());
-   			news.setContent(newNews.getContent());
-   			news.setTitle(newNews.getTitle());
-   			news.setIsTop(newNews.getIsTop());
-   			news.setImageUrl(newNews.getImageUrl());
+    		if (image != null && !image.isEmpty()) {
+            	String fileName = image.getOriginalFilename();
+          		String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+            	news.setImageUrl("http://localhost:8080/springrest/api/news-image/news"+news.getId()+"."+fileType);
+            	this.newsImageService.store(image, "news"+news.getId());
+        	}
+    		news.setAuthor(author);
+   			news.setContent(content);
+   			news.setTitle(title);
+   			news.setIsTop(isTop);
       		news.setPostedDate(new Timestamp(System.currentTimeMillis()));
    			return new ResponseEntity<News>(newsDao.saveNews(news), HttpStatus.OK);
    		} catch (Exception e) {

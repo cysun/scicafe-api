@@ -131,6 +131,27 @@ public class RewardController {
    		}
    	}
     
+    @RequestMapping(value = "/deleteRewardTag/{id}/{tid}", method = RequestMethod.PUT)
+   	public ResponseEntity<Reward> deleteRewardTag(@PathVariable Long id, @PathVariable Long tid,HttpServletRequest request) {
+   		try {
+//   			String token = request.getHeader("Authorization");
+//    		Utils.decode(token).getClaim("userId").asLong();
+//    		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
+//    		if (!Utils.proceedOnlyIfAdmin(requestUser) && !requestUser.getId().equals(id))
+//    			throw new RestException(400, "Invalid Authorization");
+       		Reward reward = rewardDao.getReward(id);
+    		if (reward == null)
+    			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
+    		Tag tag = tagDao.getTag(tid);
+    		if (tag == null)
+    			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
+    		reward.getTags().remove(tag);
+   			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
+    
     @RequestMapping(value = "/addRewardEvent/{id}/{eid}", method = RequestMethod.PUT)
    	public ResponseEntity<Reward> addRewardEvent(@PathVariable Long id, @PathVariable Long eid,HttpServletRequest request) {
    		try {
@@ -240,9 +261,9 @@ public class RewardController {
     		String token = request.getHeader("Authorization");
      		Utils.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(Utils.decode(token).getClaim("userId").asLong());
-     		if (!Utils.proceedOnlyIfAdmin (requestUser))
-     			throw new RestException(400, "Invalid Authorization");
      		Reward reward = rewardDao.getReward(id);
+     		if (!Utils.proceedOnlyIfAdmin (requestUser) && ! reward.getSubmitter().getId().equals(requestUser.getId()))
+     			throw new RestException(400, "Invalid Authorization");
     		if (reward == null)
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
     		reward.setName(newReward.getName());
@@ -250,6 +271,8 @@ public class RewardController {
     		reward.setStartTime(newReward.getStartTime());
     		reward.setEndTime(newReward.getEndTime());
     		reward.setTags(newReward.getTags());
+    		reward.setCriteria(newReward.getCriteria());
+    		reward.setStatus(0);
    			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
