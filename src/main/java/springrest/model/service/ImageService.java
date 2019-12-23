@@ -1,6 +1,5 @@
 package springrest.model.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.DirectoryNotEmptyException;
@@ -19,11 +18,11 @@ import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class EventImageService {
+public class ImageService {
 	
 
 	  Logger log = LoggerFactory.getLogger(this.getClass().getName());
-	  private final Path rootLocation = Paths.get("event-images");
+	  private final Path rootLocation = Paths.get("images");
 	 
 	  public void store(MultipartFile file,String imageName) {
 		 
@@ -50,6 +49,11 @@ public class EventImageService {
 	      throw new RuntimeException("FAIL!");
 	    }
 	  }
+	 
+	  public void deleteAll() {
+	    FileSystemUtils.deleteRecursively(rootLocation.toFile());
+	  }
+	  
 	  public void deleteFile(String filename) {
 		  
 		    try {
@@ -68,10 +72,6 @@ public class EventImageService {
 	        { 
 	            System.out.println("Invalid permissions."); 
 	        } 
-	  }
-	 
-	  public void deleteAll() {
-	    FileSystemUtils.deleteRecursively(rootLocation.toFile());
 	  }
 	 
 	  public void init() {

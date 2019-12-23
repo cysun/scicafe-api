@@ -63,14 +63,6 @@ public class Event implements Serializable{
 	private String imageUrl;
 	
 
-	public String getImageUrl() {
-		return imageUrl;
-	}
-
-	public void setImageUrl(String imageUrl) {
-		this.imageUrl = imageUrl;
-	}
-
 	@ManyToOne
 	private User organizer;
 	
@@ -182,6 +174,13 @@ public class Event implements Serializable{
 		this.endTime = endTime;
 	}
 	
+	public String getImageUrl() {
+		return imageUrl;
+	}
+
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
 
 	
 }

@@ -186,6 +186,7 @@ public class NewsController {
                 System.out.println("Unable to delete. News with id " + id + " not found");
                 return new ResponseEntity<News>(HttpStatus.NOT_FOUND);
             }
+            this.newsImageService.deleteFile(news.getImageUrl().substring(news.getImageUrl().lastIndexOf('/')+1));
          	newsDao.deleteNews(news);
          	return new ResponseEntity<News>(HttpStatus.NO_CONTENT);
          } catch (Exception e) {

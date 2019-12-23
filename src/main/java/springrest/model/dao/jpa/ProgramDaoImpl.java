@@ -42,6 +42,7 @@ public class ProgramDaoImpl implements ProgramDao {
 	public boolean deleteProgram(Program program)
 	{
     	try {
+    		entityManager.createNativeQuery("delete from users_programs where program_id = " + program.getId()).executeUpdate();
     		entityManager.remove(program);
     		return true;
     	} catch (Exception e) {

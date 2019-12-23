@@ -42,6 +42,8 @@ public class TagDaoImpl implements TagDao {
    	public boolean deleteTag(Tag tag)
    	{
        	try {
+       		entityManager.createNativeQuery("delete from events_tags where tag_id = " + tag.getId()).executeUpdate();
+       		entityManager.createNativeQuery("delete from rewards_tags where tag_id = " + tag.getId()).executeUpdate();
        		entityManager.remove(tag);
        		return true;
        	} catch (Exception e) {

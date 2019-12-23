@@ -10,9 +10,19 @@ public interface RewardDao {
 	
 	public List<Reward> getOwnRewards(Long id);
 	
+	public List<Reward> getOwnApprovedRewards(Long id);
+	
+	public List<Reward> getOwnPendingRewards(Long id);
+	
+	public List<Reward> getOwnRejectedRewards(Long id);
+	
 	public List<Reward> getRewards();
     
     public List<Reward> getApprovedRewards();
+    
+    public List<Reward> getPendingRewards();
+    
+    public List<Reward> getRejectedRewards();
 
     public Reward saveReward ( Reward  reward);
 

@@ -71,7 +71,7 @@ public class Utils {
 	
 	public static String generatePassword() {
 		String password = "";
-		char[] alphabet = "abcdefghijk~@#lmnopqrvwxyzABCD$%.EFGHIstuJK234LMNOPQRSTUVWXYZ0156789".toCharArray();
+		char[] alphabet = "abcdefghijk~@#lmnopqrvwxyzABCD$%EFGHIstuJK234LMNOPQRSTUVWXYZ0156789".toCharArray();
 		for (int i = 0; i < 10; i++) {
 			password += alphabet[(int)(Math.random()*68)];
 		}

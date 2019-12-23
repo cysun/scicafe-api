@@ -169,6 +169,7 @@ public class ProgramController {
                 System.out.println("Unable to delete. Program with id " + id + " not found");
                 return new ResponseEntity<Program>(HttpStatus.NOT_FOUND);
             }
+            this.programImageService.deleteFile(program.getImageUrl().substring(program.getImageUrl().lastIndexOf('/')+1));
         	programDao.deleteProgram(program);
         	return new ResponseEntity<Program>(HttpStatus.OK);
         } catch (Exception e) {

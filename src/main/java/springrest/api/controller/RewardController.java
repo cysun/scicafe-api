@@ -103,21 +103,89 @@ public class RewardController {
     	 }
     }
     
+ // Get all own approved rewards
+    @RequestMapping(value = "/ownApprovedRewards", method = RequestMethod.GET)
+    public ResponseEntity<List<Reward>> getOwnApprovedRewards(HttpServletRequest request)
+    {
+    	 try {
+    		String token = request.getHeader("Authorization");
+     		List<Reward> rewards = rewardDao.getOwnApprovedRewards(jwt.decode(token).getClaim("userId").asLong());
+     		if(rewards.isEmpty()){
+                return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Reward>>(rewards, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    }
     
-    @RequestMapping(value = "/addRewardTag/{id}/{tid}", method = RequestMethod.PUT)
-   	public ResponseEntity<Reward> addRewardTag(@PathVariable Long id, @PathVariable Long tid,HttpServletRequest request) {
+    // Get all own pending rewards
+    @RequestMapping(value = "/ownPendingRewards", method = RequestMethod.GET)
+    public ResponseEntity<List<Reward>> getOwPendingRewards(HttpServletRequest request)
+    {
+    	 try {
+    		String token = request.getHeader("Authorization");
+     		List<Reward> rewards = rewardDao.getOwnPendingRewards(jwt.decode(token).getClaim("userId").asLong());
+     		if(rewards.isEmpty()){
+                return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Reward>>(rewards, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    }
+    
+    // Get all own rejected rewards
+    @RequestMapping(value = "/ownRejectedRewards", method = RequestMethod.GET)
+    public ResponseEntity<List<Reward>> getOwnRejectedRewards(HttpServletRequest request)
+    {
+    	 try {
+    		String token = request.getHeader("Authorization");
+     		List<Reward> rewards = rewardDao.getOwnRejectedRewards(jwt.decode(token).getClaim("userId").asLong());
+     		if(rewards.isEmpty()){
+                return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Reward>>(rewards, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    }
+    
+    
+    @RequestMapping(value = "/addRewardTag/{id}", method = RequestMethod.PUT)
+   	public ResponseEntity<Reward> addRewardTag(@PathVariable Long id, @RequestBody List<Tag> tags,HttpServletRequest request) {
    		try {
        		Reward reward = rewardDao.getReward(id);
     		if (reward == null)
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
-    		Tag tag = tagDao.getTag(tid);
-    		if (tag == null)
-    			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
-    		reward.getTags().add(tag);
-    		for (Event e : tag.getEvents()) {
-    			if (e.getStatus() == 1 && e.getEventDate().compareTo(reward.getStartDate()) >= 0 && e.getEventDate().compareTo(reward.getEndDate()) <= 0) {
-    				reward.getEvents().add(e);
-    			}
+    		String token = request.getHeader("Authorization");
+     		jwt.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(jwt.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser) && !Utils.providedByRewardProvider(requestUser))
+     			reward.setStatus(0);
+     		//List<Reward> rewards = rewardDao.getRewards();
+     		Set<Tag> newTags = new HashSet<Tag>();
+     		for (Tag t:tags) {
+     			Tag tag = tagDao.getTag(t.getId());
+     			newTags.add(tag);
+     		}
+    		Set<Tag> oldTags = new HashSet<Tag>(reward.getTags());
+    		Set<Tag> sameTags = new HashSet<Tag>(reward.getTags());
+    		sameTags.retainAll(newTags);
+    		oldTags.removeAll(sameTags);
+    		newTags.remove(newTags);
+    		reward.getTags().clear();
+    		reward.getTags().addAll(tags);
+    		for (Tag t:oldTags) {
+    			reward.getEvents().removeAll(t.getEvents());
+    		}
+    		for (Tag t : newTags) { 
+    			Set<Event> events = t.getEvents();
+    			for (Event e : events) {
+        			if (e.getStatus() == 1 && e.getEventDate().compareTo(reward.getStartDate()) >= 0 && e.getEventDate().compareTo(reward.getEndDate()) <= 0) {
+        				reward.getEvents().add(e);
+        			}
+        		}
     		}
    			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
    		} catch (Exception e) {
@@ -135,6 +203,7 @@ public class RewardController {
     		if (tag == null)
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
     		reward.getTags().remove(tag);
+    		reward.getEvents().removeAll(tag.getEvents());
    			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
    		} catch (Exception e) {
    			throw new RestException(400, e.getMessage());
@@ -150,6 +219,11 @@ public class RewardController {
     		Event event = eventDao.getEvent(eid);
     		if (event == null)
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
+    		String token = request.getHeader("Authorization");
+     		jwt.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(jwt.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser) && !Utils.providedByRewardProvider(requestUser))
+     			reward.setStatus(0);
     		reward.getEvents().add(event);
    			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
    		} catch (Exception e) {
@@ -157,12 +231,61 @@ public class RewardController {
    		}
    	}
     
+    
+    @RequestMapping(value = "/deleteRewardEvent/{id}/{eid}", method = RequestMethod.PUT)
+   	public ResponseEntity<Reward> deleteRewardEvent(@PathVariable Long id, @PathVariable Long eid,HttpServletRequest request) {
+   		try {
+       		Reward reward = rewardDao.getReward(id);
+    		if (reward == null)
+    			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
+    		Event event = eventDao.getEvent(eid);
+    		if (event == null)
+    			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
+    		String token = request.getHeader("Authorization");
+     		jwt.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(jwt.decode(token).getClaim("userId").asLong());
+     		if (!Utils.proceedOnlyIfAdmin (requestUser) && !Utils.providedByRewardProvider(requestUser))
+     			reward.setStatus(0);
+    		reward.getEvents().remove(event);
+   			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
+   		} catch (Exception e) {
+   			throw new RestException(400, e.getMessage());
+   		}
+   	}
 
     @RequestMapping(value = "/approvedRewards", method = RequestMethod.GET)
     public ResponseEntity<List<Reward>> getApprovedRewards(HttpServletRequest request)
     {
     	 try {
      		List<Reward> rewards = rewardDao.getApprovedRewards();
+     		if(rewards.isEmpty()){
+                return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Reward>>(rewards, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    }
+    
+    @RequestMapping(value = "/pendingRewards", method = RequestMethod.GET)
+    public ResponseEntity<List<Reward>> getPendingRewards(HttpServletRequest request)
+    {
+    	 try {
+     		List<Reward> rewards = rewardDao.getPendingRewards();
+     		if(rewards.isEmpty()){
+                return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Reward>>(rewards, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    }
+    
+    @RequestMapping(value = "/rejectedRewards", method = RequestMethod.GET)
+    public ResponseEntity<List<Reward>> getRejectedRewards(HttpServletRequest request)
+    {
+    	 try {
+     		List<Reward> rewards = rewardDao.getRejectedRewards();
      		if(rewards.isEmpty()){
                 return new ResponseEntity<List<Reward>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
             }
@@ -194,13 +317,17 @@ public class RewardController {
  	   
     // edit a reward
    	@RequestMapping(value = "/reward/{id}", method = RequestMethod.PUT)
-   	public ResponseEntity<Reward> updateReward(@PathVariable Long id, @RequestParam("name") String name,@RequestParam("description") String description,@RequestParam("criteria") String criteria,@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,HttpServletRequest request) {
+   	public ResponseEntity<Reward> updateReward(@PathVariable Long id, @RequestParam("name") String name,@RequestParam("description") String description,@RequestParam("criteria") String criteria,@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("status") String status,HttpServletRequest request) {
    		System.out.println("Updating Reward " + id);
    		try {
     		String token = request.getHeader("Authorization");
      		jwt.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(jwt.decode(token).getClaim("userId").asLong());
      		Reward reward = rewardDao.getReward(id);
+     		if (reward.getName().equals(name) && reward.getDescription().equals(description) && 
+     				reward.getCriteria() == Integer.valueOf(criteria) && (startDate == null || startDate.equals("Start Date")) 
+     				&& (endDate == null || endDate.equals("End Date")) && (status == null || reward.getStatus() == Integer.valueOf(status)))
+     			return new ResponseEntity<Reward>(reward, HttpStatus.OK);
      		if (!Utils.proceedOnlyIfAdmin (requestUser) && ! reward.getSubmitter().getId().equals(requestUser.getId()))
      			throw new RestException(400, "Invalid Authorization");
     		if (reward == null)
@@ -218,8 +345,10 @@ public class RewardController {
          		reward.setEndDate(sdf.parse(endDate));
      		}
     		reward.setCriteria(Integer.valueOf(criteria));
-    		if (!Utils.providedByRewardProvider(requestUser)) {
+    		if (!Utils.providedByRewardProvider(requestUser) && (status == null || status.length() == 0 || status.equals(""))) {
     			reward.setStatus(0);
+    		} else {
+    			reward.setStatus(Integer.valueOf(status));
     		}
    			return new ResponseEntity<Reward>(rewardDao.saveReward(reward), HttpStatus.OK);
     	}  catch (Exception e) {
@@ -262,7 +391,7 @@ public class RewardController {
     			return new ResponseEntity<Reward>(HttpStatus.NOT_FOUND);
     		reward.setStatus(1);
     		rewardDao.saveReward(reward);
-    		mailUtils.sendMail(reward.getSubmitter().getEmail(), "Your reward " + reward.getName() + " has been approved", "Congratulations!Your reward application has been approved.");
+    		mailUtils.sendMail(reward.getSubmitter().getEmail(), "Your reward " + reward.getName() + " has been approved", "Congratulations!Your reward application has been approved. <p><a href=\"https://sci-cafe.com/home/rewards/detail?id="+reward.getId()+"\">Reward detail</a></p>" );
        		return new ResponseEntity<Reward>(reward, HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());

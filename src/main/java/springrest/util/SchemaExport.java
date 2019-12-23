@@ -1,6 +1,7 @@
 package springrest.util;
 
 import java.io.StringWriter;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -9,7 +10,9 @@ import javax.persistence.Persistence;
 
 import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class SchemaExport {
 
     public static void main( String args[] )

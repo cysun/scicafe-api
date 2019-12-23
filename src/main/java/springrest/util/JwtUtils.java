@@ -56,7 +56,7 @@ public class JwtUtils {
 		    Algorithm algorithm = Algorithm.HMAC256(SECRET);
 		    String jwtToken = JWT.create()
 		    	.withIssuedAt(new Date(System.currentTimeMillis()))
-		    	.withExpiresAt(new Date(System.currentTimeMillis() + (3 * 60 * 60 * 1000)))//expire in 3 hours
+		    	.withExpiresAt(new Date(System.currentTimeMillis() + ( 3 * 60 * 60 * 1000)))//expire in 3 hours
 		        .withIssuer("auth0")
 		        .withClaim("userId", user.getId())
 		        .withClaim("firstName", user.getFirstName())
@@ -68,6 +68,32 @@ public class JwtUtils {
 		    //Invalid Signing configuration / Couldn't convert Claims.
 			return "";
 		}
+	}
+	
+	public static String generateActivatedToken(String email) {
+		try {
+		    Algorithm algorithm = Algorithm.HMAC256(SECRET);
+		    String jwtToken = JWT.create()
+		    	.withIssuedAt(new Date(System.currentTimeMillis()))
+		    	.withExpiresAt(new Date(System.currentTimeMillis() + (3 * 60 * 60 * 1000)))//expire in 3 hours
+		        .withIssuer("auth0")
+		        .withClaim("userId", email)
+		        .withClaim("token", generateToken())
+		        .sign(algorithm);
+		    return jwtToken;
+		} catch (JWTCreationException exception){
+		    //Invalid Signing configuration / Couldn't convert Claims.
+			return "";
+		}
+	}
+	
+	public static String generateToken() {
+		String token = "";
+		char[] alphabet = "abcdefghijk~@#lmnopqrvwxyzABCD$%.EFGHIstuJK234LMNOPQRSTUVWXYZ0156789".toCharArray();
+		for (int i = 0; i < 12; i++) {
+			token += alphabet[(int)(Math.random()*68)];
+		}
+		return token;
 	}
 	
 }

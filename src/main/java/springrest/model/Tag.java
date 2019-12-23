@@ -24,6 +24,9 @@ public class Tag implements Serializable{
 
     @Column(nullable = false, unique = true)
     private String name;
+
+	@Column(nullable = false, unique = false)
+    private String description;
     
 	@JsonIgnore
 	@ManyToMany(mappedBy="tags" )
@@ -65,4 +68,11 @@ public class Tag implements Serializable{
 		this.name = name;
 	}
 
+    public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
 }

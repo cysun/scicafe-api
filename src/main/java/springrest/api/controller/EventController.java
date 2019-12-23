@@ -2,6 +2,7 @@ package springrest.api.controller;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -27,9 +28,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import springrest.api.error.RestException;
 import springrest.model.Event;
+import springrest.model.Reward;
 import springrest.model.Tag;
 import springrest.model.User;
 import springrest.model.dao.EventDao;
+import springrest.model.dao.RewardDao;
 import springrest.model.dao.TagDao;
 import springrest.model.dao.UserDao;
 import springrest.model.service.EventImageService;
@@ -52,6 +55,9 @@ public class EventController {
 	
 	@Autowired
     private TagDao tagDao;
+	
+	@Autowired
+	private RewardDao rewardDao;
 	
 	@Autowired
 	private EventImageService eventImageService;
@@ -109,8 +115,55 @@ public class EventController {
             return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
     	 }  catch (Exception e) {
     		 throw new RestException(400, e.getMessage());
-    	 }
-    	 
+    	 } 
+    }
+    
+    // Get all own approved events
+    @RequestMapping(value = "/ownApprovedEvents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getOwnApprovedEvents(HttpServletRequest request)
+    {
+    	 try {
+    		String token = request.getHeader("Authorization");
+     		List<Event> events = eventDao.getOwnApprovedEvents(jwt.decode(token).getClaim("userId").asLong());
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 } 
+    }
+    
+    // Get all own pending events
+    @RequestMapping(value = "/ownPendingEvents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getOwnPendingEvents(HttpServletRequest request)
+    {
+    	 try {
+    		String token = request.getHeader("Authorization");
+     		List<Event> events = eventDao.getOwnPendingEvents(jwt.decode(token).getClaim("userId").asLong());
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 } 
+    }
+    
+ // Get all own pending events
+    @RequestMapping(value = "/ownRejectedEvents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getOwnRejectedEvents(HttpServletRequest request)
+    {
+    	 try {
+    		String token = request.getHeader("Authorization");
+     		List<Event> events = eventDao.getOwnRejectedEvents(jwt.decode(token).getClaim("userId").asLong());
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 } 
     }
     
     @RequestMapping(value = "/approvedEvents", method = RequestMethod.GET)
@@ -118,6 +171,36 @@ public class EventController {
     {
     	 try {
      		List<Event> events = eventDao.getApprovedEvents();
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    	 
+    }
+    
+    @RequestMapping(value = "/pendingEvents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getPendingEvents(HttpServletRequest request)
+    {
+    	 try {
+     		List<Event> events = eventDao.getPendingEvents();
+     		if(events.isEmpty()){
+                return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
+            }
+            return new ResponseEntity<List<Event>>(events, HttpStatus.OK);
+    	 }  catch (Exception e) {
+    		 throw new RestException(400, e.getMessage());
+    	 }
+    	 
+    }
+    
+    @RequestMapping(value = "/rejectedEvents", method = RequestMethod.GET)
+    public ResponseEntity<List<Event>> getRejectedEvents(HttpServletRequest request)
+    {
+    	 try {
+     		List<Event> events = eventDao.getRejectedEvents();
      		if(events.isEmpty()){
                 return new ResponseEntity<List<Event>>(HttpStatus.NO_CONTENT);//You many decide to return HttpStatus.NOT_FOUND
             }
@@ -237,7 +320,6 @@ public class EventController {
     @RequestMapping(value = "/events", method = RequestMethod.POST)
 	public ResponseEntity<Event> createEvent(@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("name") String name,@RequestParam("location") String location,@RequestParam("description") String description,@RequestParam("eventDate") String eventDate,@RequestParam("startTime") String startTime,@RequestParam("endTime") String endTime,@RequestParam("status") String status,HttpServletRequest request) {
     	Event event = new Event();
-    	System.out.println(name);
     	System.out.println("gkd");
     	try {
     		String token = request.getHeader("Authorization");
@@ -258,6 +340,7 @@ public class EventController {
      		event.setStartTime(new Time(sdf.parse(startTime).getTime()));
      		event.setEndTime(new Time(sdf.parse(endTime).getTime()));
      		event.setOrganizer(requestUser);
+     		System.out.println("status+++++:"+event.getStatus());
      		if (status == null) {
      			event.setStatus(0);
      		} else {
@@ -266,7 +349,7 @@ public class EventController {
      		if (Utils.orgnaziedByEventOrganizor(requestUser))
      			event.setStatus(1);
      		if (image==null||image.isEmpty()) {
-     			event.setImageUrl("assets/images/events/default.jpg");
+     			event.setImageUrl("assets/images/events/default.png");
      		} else {
      			event = eventDao.saveEvent(event);
      			String fileName = image.getOriginalFilename();
@@ -284,29 +367,41 @@ public class EventController {
    	@RequestMapping(value = "/event/{id}", method = RequestMethod.PUT)
    	public ResponseEntity<Event> updateEvent(@RequestParam(value = "image",required=false) MultipartFile image,@RequestParam("name") String name,@RequestParam("location") String location,@RequestParam("description") String description,@RequestParam("eventDate") String eventDate,@RequestParam("startTime") String startTime,@RequestParam("endTime") String endTime,@RequestParam("status") String status,HttpServletRequest request,@PathVariable("id") long id) {
    		System.out.println("Updating Event " + id);
+    	System.out.println(eventDate);
    		try {
     		String token = request.getHeader("Authorization");
      		jwt.decode(token).getClaim("userId").asLong();
      		User requestUser = userDao.getUser(jwt.decode(token).getClaim("userId").asLong());
      		Event event = eventDao.getEvent(id);
+     		SimpleDateFormat sdf;
+ 			sdf = new SimpleDateFormat("HH:mm");
+ 			Time start = new Time(sdf.parse(startTime).getTime());
+     		Time end = new Time(sdf.parse(endTime).getTime());
+     		if (image == null && event.getName().equals(name) && (eventDate.equals("xx") || eventDate == null || eventDate.equals(event.getEventDate()))
+     				&& event.getLocation().equals(location) && event.getDescription().equals(description) && 
+     				event.getStartTime().equals(start) && event.getEndTime().equals(end) && (status.equals("null") || event.getStatus() == Integer.valueOf(status))) {
+     			System.out.println("xxxxxxxxxxxxxx");
+     			return new ResponseEntity<Event>(event, HttpStatus.OK);
+     		}
      		System.out.println(event.getEventDate());
      		if (!Utils.proceedOnlyIfAdmin (requestUser) && !event.getOrganizer().getId().equals(requestUser.getId()))
      			throw new RestException(400, "Invalid Authorization");
     		event.setName(name);
      		event.setDescription(description);
      		event.setLocation(location);
-     		SimpleDateFormat sdf;
      		if (eventDate != null && !eventDate.equals("xx")) {
          		sdf = new SimpleDateFormat("yyyy-MM-dd");
          		sdf.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
          		System.out.println(eventDate);
          		event.setEventDate(sdf.parse(eventDate));
      		}
- 			sdf = new SimpleDateFormat("HH:mm");
-     		event.setStartTime(new Time(sdf.parse(startTime).getTime()));
-     		event.setEndTime(new Time(sdf.parse(endTime).getTime()));
+     		event.setStartTime(start);
+     		event.setEndTime(end);
      		if (!Utils.orgnaziedByEventOrganizor(requestUser)) {
      			event.setStatus(0);
+     		}
+     		if (Utils.proceedOnlyIfAdmin(requestUser) && !status.equals("null")) {
+     			event.setStatus(Integer.valueOf(status));
      		}
      		if (image!=null && !image.isEmpty()) {
      			String fileName = image.getOriginalFilename();
@@ -335,6 +430,7 @@ public class EventController {
                 System.out.println("Unable to delete. Event with id " + id + " not found");
                 return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
             }
+            eventImageService.deleteFile(event.getImageUrl().substring(event.getImageUrl().lastIndexOf('/')+1));
             eventDao.deleteEvent(event);
         	return new ResponseEntity<Event>(HttpStatus.NO_CONTENT);
     	}  catch (Exception e) {
@@ -358,7 +454,7 @@ public class EventController {
     		event.setStatus(1);
     		eventDao.saveEvent(event);
     		String email = event.getOrganizer().getEmail();
-    	   	mailUtils.sendMail(email, "Your event " + event.getName() + " has been approved", "Congratulations!Your event application has been approved");
+    	   	mailUtils.sendMail(email, "Your event " + event.getName() + " has been approved", "Congratulations!Your event application has been approved.<p><a href=\"https://sci-cafe.com/home/events/detail?id="+event.getId()+"\">Event detail</a></p>");
        		return new ResponseEntity<Event>(event, HttpStatus.OK);
     	}  catch (Exception e) {
    		 	throw new RestException(400, e.getMessage());
@@ -397,16 +493,39 @@ public class EventController {
     }
 	 
 	//add Tag to event
-   	@RequestMapping(value = "/addEventTag/{id}/{tid}", method = RequestMethod.PUT)
-   	public ResponseEntity<Event> addEventTag(@PathVariable Long id, @PathVariable Long tid,HttpServletRequest request) {
+   	@RequestMapping(value = "/addEventTag/{id}", method = RequestMethod.PUT)
+   	public ResponseEntity<Event> addEventTag(@PathVariable Long id,@RequestBody List<Tag> tags,HttpServletRequest request) {
    		try {
        		Event event = eventDao.getEvent(id);
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-    		Tag tag = tagDao.getTag(tid);
-    		if (tag == null)
-    			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);
-    		event.getTags().add(tag);
+    		String token = request.getHeader("Authorization");
+     		jwt.decode(token).getClaim("userId").asLong();
+     		User requestUser = userDao.getUser(jwt.decode(token).getClaim("userId").asLong());
+     		Set<Tag> newTags = new HashSet<Tag>();
+     		for (Tag t:tags) {
+     			Tag tag = tagDao.getTag(t.getId());
+     			Set<Reward> rewards = tag.getRewards();
+     			for (Reward r:rewards) {
+     				if (r.getStartDate().compareTo(event.getEventDate()) <= 0 && r.getEndDate().compareTo(event.getEventDate()) >= 0) {
+     					r.getEvents().add(event);
+     					rewardDao.saveReward(r);
+     				}
+     			}
+     			newTags.add(tag);
+     		}
+     		Set<Tag> oldTags = new HashSet<Tag>(event.getTags());
+     		for (Tag t:oldTags) {
+     			Set<Reward> rewards = t.getRewards();
+     			for (Reward r:rewards) {
+     				r.getEvents().remove(event);
+     				rewardDao.saveReward(r);
+     			}
+     		}
+     		if (!Utils.proceedOnlyIfAdmin (requestUser) && !Utils.orgnaziedByEventOrganizor(requestUser) && !oldTags.equals(newTags))
+ 				event.setStatus(0);
+    		event.getTags().clear();
+    		event.getTags().addAll(newTags);
    			return new ResponseEntity<Event>(eventDao.saveEvent(event), HttpStatus.OK);
    		} catch (Exception e) {
    			throw new RestException(400, e.getMessage());
@@ -417,7 +536,6 @@ public class EventController {
    	@RequestMapping(value = "/deleteEventTag/{id}/{tid}", method = RequestMethod.PUT)
    	public ResponseEntity<Event> deleteEventTag(@PathVariable Long id, @PathVariable Long tid,HttpServletRequest request) {
    		try {
-   			System.out.println("xxxx");
        		Event event = eventDao.getEvent(id);
     		if (event == null)
     			return new ResponseEntity<Event>(HttpStatus.NOT_FOUND);

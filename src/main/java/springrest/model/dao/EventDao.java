@@ -1,8 +1,10 @@
 package springrest.model.dao;
 
 import java.util.List;
+import java.util.Set;
 
 import springrest.model.Event;
+import springrest.model.Tag;
 
 
 public interface EventDao {
@@ -13,7 +15,17 @@ public interface EventDao {
     
     List<Event> getOwnEvents(Long id);
     
+    List<Event> getOwnApprovedEvents(Long id);
+    
+    List<Event> getOwnPendingEvents(Long id);
+    
+    List<Event> getOwnRejectedEvents(Long id);
+    
     List<Event> getApprovedEvents();
+    
+    List<Event> getPendingEvents();
+    
+    List<Event> getRejectedEvents();
 
     Event saveEvent ( Event  event);
 

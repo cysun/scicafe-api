@@ -1,8 +1,11 @@
 package springrest.model.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -46,6 +49,26 @@ public class NewsImageService {
 	    } catch (MalformedURLException e) {
 	      throw new RuntimeException("FAIL!");
 	    }
+	  }
+	  
+	  public void deleteFile(String filename) {
+		  
+		    try {
+		      Path path = rootLocation.resolve(filename);
+		      Files.deleteIfExists(path);
+		      System.out.println("File deleted successfully"); 
+		    } catch(NoSuchFileException e) 
+	        { 
+	            System.out.println("No such file/directory exists"); 
+	        } 
+	        catch(DirectoryNotEmptyException e) 
+	        { 
+	            System.out.println("Directory is not empty."); 
+	        } 
+	        catch(IOException e) 
+	        { 
+	            System.out.println("Invalid permissions."); 
+	        } 
 	  }
 	 
 	  public void deleteAll() {

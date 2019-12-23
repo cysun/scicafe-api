@@ -82,7 +82,7 @@ public class TagController {
       		if (!Utils.proceedOnlyIfAdmin(requestUser))
       			throw new RestException(400, "Invalid Authorization");
       		System.out.println("Creating Tag " + tag.getName());
-        	if (tag.getName() == null)
+        	if (tag.getName() == null || tag.getDescription()==null)
         		throw new RestException( 400, "missing required field(s)." );
         	if (tagDao.isTagExists(tag)) {
                 System.out.println("A Tag with name " + tag.getName() + " already exist");
@@ -109,6 +109,7 @@ public class TagController {
     		if (tag == null)
     			return new ResponseEntity<Tag>(HttpStatus.NOT_FOUND);
     		tag.setName(newTag.getName());
+    		tag.setDescription(newTag.getDescription());
    			return new ResponseEntity<Tag>(tagDao.saveTag(tag), HttpStatus.OK);
    		} catch (Exception e) {
    			throw new RestException(400, e.getMessage());

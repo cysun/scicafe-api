@@ -37,6 +37,18 @@ public class RewardDaoImpl implements RewardDao {
     }
     
     @Override
+    public List<Reward> getPendingRewards() {
+    	return entityManager.createQuery( "select r from Reward r where r.status=0 order by id ", Reward.class )
+                .getResultList();
+    }
+    
+    @Override
+    public List<Reward> getRejectedRewards() {
+    	return entityManager.createQuery( "select r from Reward r where r.status=2 order by id ", Reward.class )
+                .getResultList();
+    }
+    
+    @Override
     @Transactional
     public Reward saveReward( Reward reward )
     {
@@ -48,6 +60,8 @@ public class RewardDaoImpl implements RewardDao {
    	public boolean deleteReward(Reward reward)
    	{
        	try {
+       		entityManager.createNativeQuery("delete from rewards_events where reward_id = " + reward.getId()).executeUpdate();
+       		entityManager.createNativeQuery("delete from events_tags where tag_id = " + reward.getId()).executeUpdate();
        		entityManager.remove(reward);
        		return true;
        	} catch (Exception e) {
@@ -68,6 +82,24 @@ public class RewardDaoImpl implements RewardDao {
 	@Override
 	public List<Reward> getOwnRewards(Long id) {
 		return entityManager.createQuery( "select r from Reward r where r.submitter.id = " + id + "order by id", Reward.class )
+	            .getResultList();
+	}
+	
+	@Override
+	public List<Reward> getOwnApprovedRewards(Long id) {
+		return entityManager.createQuery( "select r from Reward r where r.status=1 and r.submitter.id = " + id + "order by id", Reward.class )
+	            .getResultList();
+	}
+	
+	@Override
+	public List<Reward> getOwnPendingRewards(Long id) {
+		return entityManager.createQuery( "select r from Reward r where r.status=0 and r.submitter.id = " + id + "order by id", Reward.class )
+	            .getResultList();
+	}
+	
+	@Override
+	public List<Reward> getOwnRejectedRewards(Long id) {
+		return entityManager.createQuery( "select r from Reward r where r.status=2 and r.submitter.id = " + id + "order by id", Reward.class )
 	            .getResultList();
 	}
 }

@@ -1,6 +1,7 @@
 package springrest.model;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ public class User implements Serializable {
     @Column(nullable = false)
     private String lastName;
     
-
+    @JsonIgnore
     @Enumerated(EnumType.STRING)
     private Position position;
 
@@ -56,6 +57,10 @@ public class User implements Serializable {
     private String email;
     
     private String title;
+    
+    private int enabled;
+    
+    private String token;
     
     @ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},fetch=FetchType.LAZY)
     @JoinTable(name = "users_programs",
@@ -193,6 +198,22 @@ public class User implements Serializable {
 
 	public void setEvents(Set<Event> events) {
 		this.events = events;
+	}
+
+	public int getEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(int enabled) {
+		this.enabled = enabled;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 
     
